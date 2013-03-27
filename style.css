@@ -1,9 +1,9 @@
 body {
-    background-color: #252525;
+    background-color: #F9F9F9;
 }
 
 #gameboard {
-    background-color: #1A1A1A;
+    background-color: #F0F0F0;
     width: 150px;
     height: 350px;
     position: absolute;
