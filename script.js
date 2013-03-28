@@ -5,18 +5,29 @@ var game = function () {
 
     $(document).ready(function () {
 
+        var addGamepiece = function addGamepiece(column) {
+            color = Math.floor(Math.random() * colors.length);
+            $('<div/>', {
+                class: "gamepiece " + colors[color]
+            }).data('column', column)
+            .hide()
+            .prependTo('#col' + column)
+            .fadeIn('slow');
+        };
+
         //add pieces
-        var i, j, color;
-        for (i = 1; i <= columns; i++) {
-            for (j = 1; j <= rows; j++) {
-                color = Math.floor(Math.random() * colors.length);
-                $('#col' + i).prepend('<div class="gamepiece ' + colors[color] + '"></div>');
+        var column, row, color;
+        for (column = 1; column <= columns; column++) {
+            for (row = 1; row <= rows; row++) {
+                addGamepiece(column);
             }
         }
 
         //clear pieces on click
         $('.gamepiece').click(function () {
-            $(this).fadeOut('fast');
+            $(this).fadeOut('slow', function () {
+                addGamepiece($(this).data('column'));
+            });
         });
     });
 }();
