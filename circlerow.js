@@ -37,55 +37,87 @@ var circlerow = function () {
                                .css('width', pieceSize + 'px')
                                .css('height', pieceSize + 'px');
         piece.click(pieceClick);
-        piece.hover(highlightPieces);
+        piece.hover(pieceHover);
         return piece;
     };
 
-    var pieceClick = function () {
+    var pieceHover = function () {
         clearHighlight();
-
-        //clear piece and replace
-        $(this).fadeOut('fast', function () {
-            var pos = piecePos($(this)),
-                column = + pos['column'],
-                row = + pos['row'];
-            //re-number the pieces above
-            while (row > 1) {
-                getPiece(column, row - 1).attr('id', pieceId(column, row))
-                                         .attr('title', pieceId(column, row));
-                row--;
-            }
-            //add a piece at the top
-            $('#col' + column).prepend(newPiece(+ column, 1));
-
-        });
+        if (highlightPieces($(this)) < minimumMatch) {
+            clearHighlight();
+        }
     };
 
-    var highlightPieces = function () {
-        var total = 0,
-            color = $(this).data('color');
+    var pieceClick = function () {
+        var highlighted,
+            removed = 0;
+        clearHighlight();
+        highlighted = highlightPieces($(this));
+        if (highlighted < minimumMatch) {
+            clearHighlight();
+        } else {
+            $('.highlight').attr('id', '')
+                           .fadeOut('slow',
+            function () {
+                removed++;
+                if (removed == highlighted) {
+                    rebuildIds();
+                }
+            });
+        }
+    };
 
-        var highlightAdjoining = function highlightAdjoining (div) {
+    var rebuildIds = function () {
+        var above;
+        for (var column = 1; column <= columns; column++) {
+            for (var row = rows; row >= 1; row--) { // start at the bottom
 
-            if (!div.hasClass('highlight') && div.data('color') === color) {
-
-                var column = + piecePos(div)['column'],
-                    row = + piecePos(div)['row'];
-
-                total++;
-                div.addClass('highlight');
-
-                highlightAdjoining(getPiece(column, row - 1));
-                highlightAdjoining(getPiece(column, row + 1));
-                highlightAdjoining(getPiece(column - 1, row));
-                highlightAdjoining(getPiece(column + 1, row));
+                above = row + 1;
+                while (above <= rows && !getPiece(column, row).length) {
+                    console.log(column + ', ' + row, ', ' + above + ', ' + getPiece(column, row).length);
+                    if (getPiece(column, above).length) {
+                        getPiece(column, above).attr('id', pieceId(column, row))
+                                               .attr('title', pieceId(column, row));
+                    }
+                    above--;
+                }
+                //add a piece at the top
+                if (!getPiece(column, row).length) {
+                    $('#col' + column).prepend(newPiece(column, 1));
+                }
             }
+        }
+    };
+
+    var highlightPieces = function (div) {
+        var total = 0,
+            color = div.data('color'),
+            column = + piecePos(div)['column'],
+            row = + piecePos(div)['row'];
+
+        var highlightPiece = function (div1) {
+            if (div1 && !div1.hasClass('highlight')) {
+                total++;
+                div1.addClass('highlight');
+                return true;
+            }
+            return false;
         };
 
-        clearHighlight();
-        highlightAdjoining($(this));
-        if (total < minimumMatch) {
-            clearHighlight();
+        onAdjoining(column, row, color, highlightPiece);
+
+        return total;
+    };
+
+    var onAdjoining = function onAdjoining (column, row, color, fn) {
+        if (1 <= column && column <= columns && 1 <= row && row <= rows) {
+            var div = getPiece(column, row);
+            if (div.data('color') === color && fn(div)) {
+                onAdjoining(column, row - 1, color, fn);
+                onAdjoining(column, row + 1, color, fn);
+                onAdjoining(column - 1, row, color, fn);
+                onAdjoining(column + 1, row, color, fn);
+            }
         }
     };
 
@@ -102,7 +134,7 @@ var circlerow = function () {
     };
 
     var piecePos = function (div) {
-        var id = div.attr('id'),
+        var id = div.attr('id') || '',
         pos = [];
         pos['column'] = + id.split('_')[0] || 0;
         pos['row'] = + id.split('_')[1] || 0;
