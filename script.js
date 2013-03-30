@@ -3,30 +3,43 @@ var game = function () {
     var colors = ['red', 'orange', 'pink'];
     var columns = 3, rows = 7;
 
+    //add pieces
     $(document).ready(function () {
-        //add pieces
         var column, row, color;
         for (column = 1; column <= columns; column++) {
             for (row = 1; row <= rows; row++) {
-                addGamepiece(column, row);
+                addPiece(column, row);
             }
         }
     });
 
-    var addGamepiece = function(column, row) {
+    var addPiece = function(column, row) {
         $('<div/>')
-        .attr('class', "gamepiece " + randomColor())
+        .attr('class', 'gamepiece ' + randomColor())
+        .attr('id', pieceId(column, row))
         .data('column', column).data('row', row)
-        .click(gamepieceClick)
+        .click(pieceClick)
         .hide()
         .prependTo('#col' + column)
         .fadeIn('slow');
     };
 
-    var gamepieceClick = function() {
+    var pieceId = function(column, row) {
+        return column + ',' + row;
+    };
+
+    var piecePos = function(div) {
+        var pos = [], id = div.attr('id').split(',');
+        pos['column'] = id[0] || 0;
+        pos['row'] = id[1] || 0;
+        return pos;
+    };
+
+    var pieceClick = function() {
         //clear pieces and replace
-        $(this).fadeOut('slow', function () {
-            addGamepiece($(this).data('column'));
+        console.log(piecePos($(this)));
+        $(this).fadeOut('fast', function () {
+            addPiece(piecePos($(this))['column'], rows);
         });
     };
 
