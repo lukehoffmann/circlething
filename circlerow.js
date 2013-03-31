@@ -1,23 +1,27 @@
 var circlerow = function () {
 
-    var columns = 3,
+    var columns = 5,
         rows = 5,
         pieceSize = 50, //px
         colors = ['red', 'orange', 'pink'],
         minimumMatch = 3;
 
+    $('#gameboard').css('width', columns * pieceSize + 'px')
+                   .css('height', rows * pieceSize + 'px');
+
     $(document).ready(function () {
+        var c, r, column, piece;
 
-        $('#gameboard').css('width', columns * pieceSize + 'px')
-                       .css('height', rows * pieceSize + 'px')
-                       .mouseleave(clearHighlight);
-
-        for (var column = 1; column <= columns; column++) {
-            newColumn(column).appendTo('#gameboard');
-            for (var row = 1; row <= rows; row++) {
-                newPiece(column, row).hide().appendTo('#col' + column).fadeIn('slow');
+        for (c = 1; c <= columns; c++) {
+            column = newColumn(c);
+            column.appendTo('#gameboard');
+            for (r = 1; r <= rows; r++) {
+                piece = newPiece(c, r);
+                piece.hide().appendTo(column).fadeIn('slow');
             }
         }
+
+        $('#gameboard').mouseleave(clearHighlight);
     });
 
     var newColumn = function (column) {
@@ -28,39 +32,36 @@ var circlerow = function () {
     };
 
     var newPiece = function (column, row) {
-        var color = randomColor(),
-            piece = $('<div/>').addClass('gamepiece')
-                               .addClass(color)
-                               .data('color', color)
-                               .attr('id', pieceId(column, row))
-                               .attr('title', pieceId(column, row))
-                               .css('width', pieceSize + 'px')
-                               .css('height', pieceSize + 'px');
-        piece.click(pieceClick);
-        piece.hover(pieceHover);
-        return piece;
+        var color = randomColor();
+        return $('<div/>').addClass('gamepiece')
+                          .addClass(color)
+                          .data('color', color)
+                          .attr('id', pieceId(column, row))
+                          .css('width', pieceSize + 'px')
+                          .css('height', pieceSize + 'px')
+                          .click(pieceClick)
+                          .hover(pieceHover);
     };
 
     var pieceHover = function () {
         clearHighlight();
-        if (highlightPieces($(this)) < minimumMatch) {
+        if (markAdjacentPieces($(this), 'highlight') < minimumMatch) {
             clearHighlight();
         }
     };
 
     var pieceClick = function () {
-        var highlighted,
+        //clearHighlight();
+        var toDelete = markAdjacentPieces($(this), 'delete'),
             removed = 0;
-        clearHighlight();
-        highlighted = highlightPieces($(this));
-        if (highlighted < minimumMatch) {
-            clearHighlight();
+        if (toDelete < minimumMatch) {
+            //clearHighlight();
         } else {
-            $('.highlight').attr('id', '')
-                           .fadeOut('slow',
+            $('.delete').attr('id', '')
+                        .fadeOut('fast',
             function () {
                 removed++;
-                if (removed == highlighted) {
+                if (removed == toDelete) {
                     rebuildIds();
                 }
             });
@@ -68,56 +69,46 @@ var circlerow = function () {
     };
 
     var rebuildIds = function () {
-        var above;
         for (var column = 1; column <= columns; column++) {
-            for (var row = rows; row >= 1; row--) { // start at the bottom
-
-                above = row - 1;
-                while (above > 0 && !getPiece(column, row).length) {
-                    if (getPiece(column, above).length) {
-                        getPiece(column, above).attr('id', pieceId(column, row))
-                                               .attr('title', pieceId(column, row));
+            for (var row = rows; row >= 1; row--) {
+                var above = row - 1;
+                while (above > 0 && !pieceExists(column, row)) {
+                    if (pieceExists(column, above)) {
+                        getPiece(column, above).attr('id', pieceId(column, row));
                     }
                     above--;
                 }
-                //add a piece at the top
-                if (!getPiece(column, row).length) {
-                    $('#col' + column).prepend(newPiece(column, row));
+                if (!pieceExists(column, row)) {
+                    newPiece(column, row).hide().prependTo($('#col' + column)).fadeIn('fast');
                 }
             }
         }
     };
 
-    var highlightPieces = function (div) {
-        var total = 0,
-            color = div.data('color'),
+    var markAdjacentPieces = function (div, newClass) {
+        var color = div.data('color'),
             column = + piecePos(div)['column'],
             row = + piecePos(div)['row'];
 
-        var highlightPiece = function (div1) {
-            if (div1 && !div1.hasClass('highlight')) {
-                total++;
-                div1.addClass('highlight');
-                return true;
+        var markPiece = function (column, row, color) {
+            var count = 0;
+            if (1 <= column && column <= columns && 1 <= row && row <= rows) {
+                var div = getPiece(column, row);
+                if (div && div.data('color') === color && !div.hasClass(newClass)) {
+                    count = 1;
+                    div.addClass(newClass);
+
+                    count += markPiece(column, row - 1, color);
+                    count += markPiece(column, row + 1, color);
+                    count += markPiece(column - 1, row, color);
+                    count += markPiece(column + 1, row, color);
+                    console.log(count);
+                }
             }
-            return false;
+            return count;
         };
 
-        onAdjoining(column, row, color, highlightPiece);
-
-        return total;
-    };
-
-    var onAdjoining = function onAdjoining (column, row, color, fn) {
-        if (1 <= column && column <= columns && 1 <= row && row <= rows) {
-            var div = getPiece(column, row);
-            if (div.data('color') === color && fn(div)) {
-                onAdjoining(column, row - 1, color, fn);
-                onAdjoining(column, row + 1, color, fn);
-                onAdjoining(column - 1, row, color, fn);
-                onAdjoining(column + 1, row, color, fn);
-            }
-        }
+        return markPiece(column, row, color);
     };
 
     var clearHighlight = function () {
@@ -126,6 +117,10 @@ var circlerow = function () {
 
     var getPiece = function (column, row) {
         return $("#" + pieceId(column, row));
+    };
+
+    var pieceExists = function (column, row) {
+        return $("#" + pieceId(column, row)).length > 0;
     };
 
     var pieceId = function (column, row) {

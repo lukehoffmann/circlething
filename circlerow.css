@@ -32,6 +32,10 @@ div#gameboard {
    background-color: #FF847C;
 }
 
+.blue {
+    background-color: blue
+}
+
 .highlight {
     background-color: #BBB;
 }
