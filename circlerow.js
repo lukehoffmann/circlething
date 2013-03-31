@@ -1,7 +1,7 @@
 var circlerow = function () {
 
-    var columns = 5,
-        rows = 10,
+    var columns = 3,
+        rows = 5,
         pieceSize = 50, //px
         colors = ['red', 'orange', 'pink'],
         minimumMatch = 3;
@@ -72,9 +72,8 @@ var circlerow = function () {
         for (var column = 1; column <= columns; column++) {
             for (var row = rows; row >= 1; row--) { // start at the bottom
 
-                above = row + 1;
-                while (above <= rows && !getPiece(column, row).length) {
-                    console.log(column + ', ' + row, ', ' + above + ', ' + getPiece(column, row).length);
+                above = row - 1;
+                while (above > 0 && !getPiece(column, row).length) {
                     if (getPiece(column, above).length) {
                         getPiece(column, above).attr('id', pieceId(column, row))
                                                .attr('title', pieceId(column, row));
@@ -83,7 +82,7 @@ var circlerow = function () {
                 }
                 //add a piece at the top
                 if (!getPiece(column, row).length) {
-                    $('#col' + column).prepend(newPiece(column, 1));
+                    $('#col' + column).prepend(newPiece(column, row));
                 }
             }
         }
