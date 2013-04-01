@@ -1,6 +1,6 @@
 var circlerow = function () {
 
-    var columns = 5,
+    var columns = 3,
         rows = 5,
         pieceSize = 50, //px
         colors = ['red', 'orange', 'pink'],
@@ -21,7 +21,9 @@ var circlerow = function () {
             }
         }
 
-        $('#gameboard').mouseleave(clearHighlight);
+        $('#gameboard').mouseleave(function () {
+            clearHighlight('highlight');
+        });
     });
 
     var newColumn = function (column) {
@@ -44,19 +46,18 @@ var circlerow = function () {
     };
 
     var pieceHover = function () {
-        clearHighlight();
+        clearHighlight('highlight');
         if (markAdjacentPieces($(this), 'highlight') < minimumMatch) {
-            clearHighlight();
+            clearHighlight('highlight');
         }
     };
 
     var pieceClick = function () {
-        //clearHighlight();
+        clearHighlight('delete');
         var toDelete = markAdjacentPieces($(this), 'delete'),
             removed = 0;
-        if (toDelete < minimumMatch) {
-            //clearHighlight();
-        } else {
+
+        if (toDelete >= minimumMatch) {
             $('.delete').attr('id', '')
                         .fadeOut('fast',
             function () {
@@ -79,7 +80,7 @@ var circlerow = function () {
                     above--;
                 }
                 if (!pieceExists(column, row)) {
-                    newPiece(column, row).hide().prependTo($('#col' + column)).fadeIn('fast');
+                    newPiece(column, row).hide().prependTo($('#col' + column)).fadeIn('slow');
                 }
             }
         }
@@ -102,17 +103,18 @@ var circlerow = function () {
                     count += markPiece(column, row + 1, color);
                     count += markPiece(column - 1, row, color);
                     count += markPiece(column + 1, row, color);
-                    console.log(count);
                 }
             }
             return count;
         };
 
-        return markPiece(column, row, color);
+        var total = markPiece(column, row, color);
+
+        return total;
     };
 
-    var clearHighlight = function () {
-        $('.gamepiece').removeClass('highlight');
+    var clearHighlight = function (className) {
+        $('.gamepiece').removeClass(className);
     };
 
     var getPiece = function (column, row) {
