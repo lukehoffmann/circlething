@@ -1,8 +1,10 @@
-body {
+html, body {
+    height: 100%;
+    width: 100%;
     background-color: #F9F9F9;
 }
 
-div#gameboard {
+#gameboard {
     background-color: #F0F0F0;
     position: absolute;
     top:0;
@@ -10,6 +12,14 @@ div#gameboard {
     left: 0;
     right: 0;
     margin: auto;
+}
+
+body.endgame {
+    background-color: #A0A0A0
+}
+
+#gameboard.endgame {
+    background-color: #AAAAAA
 }
 
 .column {
