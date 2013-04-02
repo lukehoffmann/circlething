@@ -127,7 +127,7 @@ var circlerow = function () {
             r = + piecePos(div)['row'];
 
         color = color || div.data('color');
-        console.log('c ' + c + ' r ' + r + ' color ' + color);
+
         if (1 <= c && c <= columns && 1 <= r && r <= rows) {
 
             if (div && div.data('color') === color && !div.hasClass(newClass)) {
