@@ -122,22 +122,21 @@ var circlerow = function () {
     };
 
     var addClassToAdjacentPieces = function (div, newClass, color) {
-        var count = 0,
-            c = + piecePos(div)['column'],
-            r = + piecePos(div)['row'];
-
         color = color || div.data('color');
-
+        
         if (div && div.data('color') === color && !div.hasClass(newClass)) {
-            count = 1;
+            var c = + piecePos(div)['column'],
+                r = + piecePos(div)['row'];
+        
             div.addClass(newClass);
-
-            count += addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color);
-            count += addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color);
-            count += addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color);
-            count += addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color);
+            return 1
+            + addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color)
+            + addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color)
+            + addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color)
+            + addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color);
+        } else {
+            return 0;
         }
-        return count;
     };
 
     var clearClass = function (className) {
@@ -145,11 +144,7 @@ var circlerow = function () {
     };
 
     var getPiece = function (c, r) {
-        //if (1 <= c && c <= columns && 1 <= r && r <= rows) {
-            return $("#" + pieceId(c, r));
-        //} else {
-        //    return null;
-        //}
+        return $("#" + pieceId(c, r));
     };
 
     var pieceExists = function (c, r) {
