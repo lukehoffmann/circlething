@@ -145,11 +145,11 @@ var circlerow = function () {
     };
 
     var getPiece = function (c, r) {
-        if (1 <= c && c <= columns && 1 <= r && r <= rows) {
+        //if (1 <= c && c <= columns && 1 <= r && r <= rows) {
             return $("#" + pieceId(c, r));
-        } else {
-            return null;
-        }
+        //} else {
+        //    return null;
+        //}
     };
 
     var pieceExists = function (c, r) {
