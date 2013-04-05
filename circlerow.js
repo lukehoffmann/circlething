@@ -1,7 +1,7 @@
 var circlerow = function () {
 
     var columns = 3,
-        rows = 5,
+        rows = 4,
         pieceSize = 70, //px
         colors = ['red', 'orange', 'pink'],
         minimumMatch = 3;
