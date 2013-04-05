@@ -128,17 +128,14 @@ var circlerow = function () {
 
         color = color || div.data('color');
 
-        if (1 <= c && c <= columns && 1 <= r && r <= rows) {
+        if (div && div.data('color') === color && !div.hasClass(newClass)) {
+            count = 1;
+            div.addClass(newClass);
 
-            if (div && div.data('color') === color && !div.hasClass(newClass)) {
-                count = 1;
-                div.addClass(newClass);
-
-                count += addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color);
-                count += addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color);
-                count += addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color);
-                count += addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color);
-            }
+            count += addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color);
+            count += addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color);
+            count += addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color);
+            count += addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color);
         }
         return count;
     };
@@ -148,7 +145,11 @@ var circlerow = function () {
     };
 
     var getPiece = function (c, r) {
-        return $("#" + pieceId(c, r));
+        if (1 <= c && c <= columns && 1 <= r && r <= rows) {
+            return $("#" + pieceId(c, r));
+        } else {
+            return null;
+        }
     };
 
     var pieceExists = function (c, r) {
