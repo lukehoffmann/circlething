@@ -1,7 +1,7 @@
 var circlerow = function () {
 
     var columns = 3,
-        rows = 5,
+        rows = 6,
         pieceSize = 70, //px
         colors = ['red', 'orange', 'pink', 'purple'],
         minimumMatch = 3;
@@ -164,7 +164,7 @@ var circlerow = function () {
     };
 
     var randomColor = function () {
-        return colors[Math.floor(Math.random() * (colors.length - 0.8))];
+        return colors[Math.floor(Math.random() * (colors.length - 0.9))];
     };
 
 }();
