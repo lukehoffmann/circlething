@@ -1,5 +1,5 @@
-html, body {
-    height: 90%;
+body {
+    /*height: 90%;*/
     width: 90%;
     background-color: #F9F9F9;
     margin: auto;
@@ -16,12 +16,7 @@ h1 {
 
 #gameboard {
     background-color: #F0F0F0;
-    /*position: absolute;*/
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 10% auto 10% auto;
+    margin: 5% auto 0 auto;
 }
 
 body.endgame {
