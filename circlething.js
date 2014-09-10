@@ -1,4 +1,4 @@
-var circlerow = function () {
+var circlething = function () {
 
     var columns = 3,
         rows = 6,
@@ -13,11 +13,13 @@ var circlerow = function () {
         startGame();
 
         $('#gameboard').mouseleave(function () {
-                            clearClass('highlight');
-                        });
+            clearClass('highlight');
+        });
     });
 
     var startGame = function () {
+        recolorTitle();
+
         $('.gamepiece').remove();
         $('.column').remove();
 
@@ -32,8 +34,8 @@ var circlerow = function () {
                      .fadeIn('slow');
             }
         }
-         while (detectEndgame()) {
-                startGame();
+        while (detectEndgame()) {
+            startGame();
         }
     };
 
@@ -45,7 +47,7 @@ var circlerow = function () {
     };
 
     var newPiece = function (c, r) {
-        var color = randomColor();
+        var color = randomColor() + "gamepiece";
         return $('<div/>').addClass('gamepiece')
                           .addClass(color)
                           .data('color', color)
@@ -76,8 +78,9 @@ var circlerow = function () {
             if (toDelete >= minimumMatch) {
                 $('.delete').attr('id', '')
                             .fadeOut('fast', function () {
+                                this.remove();
                                 removed++;
-                                if (removed == toDelete) {
+                                if (removed === toDelete) {
                                     rebuildIds();
                                     detectEndgame();
                                 }
@@ -109,7 +112,7 @@ var circlerow = function () {
         var c, r, count;
         for (c = 1; c <= columns; c++) {
             for (r = 1; r <= rows; r++) {
-                count = addClassToAdjacentPieces(getPiece(c, r),  'temp');
+                count = addClassToAdjacentPieces(getPiece(c, r), 'temp');
                 clearClass('temp');
                 if (count >= minimumMatch) {
                     return false;
@@ -123,11 +126,11 @@ var circlerow = function () {
 
     var addClassToAdjacentPieces = function (div, newClass, color) {
         color = color || div.data('color');
-        
+
         if (div && div.data('color') === color && !div.hasClass(newClass)) {
-            var c = + piecePos(div)['column'],
-                r = + piecePos(div)['row'];
-        
+            var c = +piecePos(div).column,
+                r = +piecePos(div).row;
+
             div.addClass(newClass);
             return 1
             + addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color)
@@ -158,13 +161,20 @@ var circlerow = function () {
     var piecePos = function (div) {
         var id = div.attr('id') || '',
         pos = [];
-        pos['column'] = + id.split('_')[0] || 0;
-        pos['row'] = + id.split('_')[1] || 0;
+        pos.column = +id.split('_')[0] || 0;
+        pos.row = +id.split('_')[1] || 0;
         return pos;
     };
 
     var randomColor = function () {
         return colors[Math.floor(Math.random() * (colors.length - 0.9))];
     };
+
+    //re-generate random colors outside of gameboard
+    var recolorTitle = function() {
+        $('.random').each(function () {
+            $(this).addClass(randomColor());
+        });
+    }
 
 }();

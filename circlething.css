@@ -1,49 +1,77 @@
 html, body {
-    height: 100%;
-    width: 100%;
+    height: 90%;
+    width: 90%;
     background-color: #F9F9F9;
+    margin: auto;
+}
+
+h1 {
+    width: 100%;
+    text-align: center;
+    text-transform: lowercase;
+    font-size: 5em;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: normal;
 }
 
 #gameboard {
     background-color: #F0F0F0;
-    position: absolute;
-    top:0;
+    /*position: absolute;*/
+    top: 0;
     bottom: 0;
     left: 0;
     right: 0;
-    margin: auto;
+    margin: 10% auto 10% auto;
 }
 
 body.endgame {
-    background-color: #A0A0A0
+    background-color: #A0A0A0;
 }
 
 #gameboard.endgame {
-    background-color: #AAAAAA
+    background-color: #AAAAAA;
 }
 
 .column {
-    float:left;
+    float: left;
     display: table;
 }
 
-.gamepiece {
-    border-radius: 100%;
-    background-color: #FF9C5B;
+.orange {
+    color: #FF9C5B;
 }
 
-.orange {
-    background-color: #FF9C5B;
-}
 .red {
-   background-color: #E84A5F;
+    color: #E84A5F;
 }
+
 .pink {
-   background-color: #FF847C;
+    color: #FF847C;
 }
 
 .purple {
-    background-color: #cc52cc
+    color: #cc52cc;
+}
+
+.gamepiece {
+    border-radius: 50%;
+    background-color: #FF9C5B;
+}
+
+.orangegamepiece {
+    background-color: #FF9C5B;
+}
+
+.redgamepiece {
+    background-color: #E84A5F;
+}
+
+.pinkgamepiece {
+    background-color: #FF847C;
+}
+
+.purplegamepiece {
+    background-color: #cc52cc;
 }
 
 .highlight {
