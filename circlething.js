@@ -18,7 +18,10 @@ var circlething = function () {
     });
 
     var startGame = function () {
+      
         recolorTitle();
+        recolorFavicon();
+        
 
         $('.gamepiece').remove();
         $('.column').remove();
@@ -173,8 +176,23 @@ var circlething = function () {
     //re-generate random colors outside of gameboard
     var recolorTitle = function() {
         $('.random').each(function () {
+            $(this).removeClass(colors.join(" "))
             $(this).addClass(randomColor());
         });
     }
 
+    //debugging recolor
+    $('body').click(function () {
+        recolorTitle();
+        recolorFavicon();
+        });
+
+    //randomise the favicon
+    var recolorFavicon = function() {
+        var ico = randomColor().concat('.png')
+        $('#randomfavicon').attr('href', ico);
+    }
+    
+    
+    
 }();
