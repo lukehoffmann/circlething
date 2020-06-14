@@ -72,3 +72,11 @@ body.endgame {
 .highlight {
     background-color: #BBB;
 }
+
+/* fade */
+.show {
+    transition: opacity 1000ms;
+  }
+.hide {
+    opacity: 0;
+  }
