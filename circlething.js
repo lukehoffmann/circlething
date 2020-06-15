@@ -1,214 +1,209 @@
 'use strict'
 
-var Circlething = function () {
-  var columns = 3
-  var rows = 6
-  var pieceSize = 70 // px
-  var colors = ['red', 'orange', 'pink', 'purple']
-  var minimumMatch = 3
+const Circlething = function () {
+  const columns = 3
+  const rows = 6
+  const pieceSize = 70 // px
+  const colors = ['red', 'orange', 'pink', 'purple']
+  const minimumComboSize = 3
 
-  function ready (fn) {
-    if (document.readyState !== 'loading') {
-      fn()
-    } else {
-      document.addEventListener('DOMContentLoaded', fn)
-    }
+  if (document.readyState !== 'loading') {
+    onReady()
+  } else {
+    document.addEventListener('DOMContentLoaded', onReady)
   }
 
-  ready(function () {
+  function onReady () {
     const board = document.querySelector('#gameboard')
-    board.style.width = columns * pieceSize + 'px'
-    board.style.height = rows * pieceSize + 'px'
+    board.style.width = `${columns * pieceSize}px`
+    board.style.height = `${rows * pieceSize}px`
 
-    board.addEventListener('mouseleave', () => clearClass('highlight'))
+    recolorTitleAndFavicon()
+    document.addEventListener('click', recolorTitleAndFavicon)
 
     startGame()
-  })
+  }
 
-  var startGame = function () {
+  function startGame () {
+    // clear everything from previous games
     document.querySelector('body').classList.remove('endgame')
     document.querySelector('#gameboard').classList.remove('endgame')
-    recolorTitle()
-    recolorFavicon()
-
     document.querySelectorAll('.gamepiece')
       .forEach(e => e.parentElement.removeChild(e))
     document.querySelectorAll('.column')
       .forEach(e => e.parentElement.removeChild(e))
 
-    var c, r, column, piece
-    for (c = 1; c <= columns; c++) {
-      column = newColumn(c)
+    // populate a new board
+    for (let c = 1; c <= columns; c++) {
+      const column = newColumn(c)
       document.querySelector('#gameboard').appendChild(column)
-      for (r = 1; r <= rows; r++) {
-        piece = newPiece(c, r)
-        piece.classList.add('hide')
-        column.append(piece)
-        piece.classList.add('show')
-        piece.classList.remove('hide')
+      for (let r = 1; r <= rows; r++) {
+        column.append(newPiece(c, r))
       }
     }
+
+    // if the board is unplayable, try again
     while (detectEndgame()) {
       startGame()
     }
   }
 
-  var newColumn = function (c) {
-    var d = document.createElement('div')
-    d.classList.add('column')
-    d.setAttribute('id', 'col' + c)
-    d.style.width = pieceSize + 'px'
-    d.style.height = rows * pieceSize + 'px'
-    return d
+  function newColumn (c) {
+    const column = document.createElement('div')
+    column.classList.add('column')
+    column.setAttribute('id', `col${c}`)
+    column.style.width = `${pieceSize}px`
+    column.style.height = `${rows * pieceSize}px`
+    return column
   }
 
-  var newPiece = function (c, r) {
-    var color = randomColor() + 'gamepiece'
-    var d = document.createElement('div')
-    d.classList.add('gamepiece')
-    d.classList.add(color)
-    d.setAttribute('color', color)
-    d.setAttribute('id', pieceId(c, r))
-    d.style.width = pieceSize + 'px'
-    d.style.height = pieceSize + 'px'
-    d.addEventListener('mouseover', pieceHover)
-    d.addEventListener('click', pieceClick)
-    return d
+  function newPiece (c, r) {
+    const color = randomColor()
+    const piece = document.createElement('div')
+    piece.classList.add('gamepiece')
+    piece.classList.add(`${color}gamepiece`)
+    piece.setAttribute('color', color)
+    piece.setAttribute('id', pieceId(c, r))
+    piece.style.width = `${pieceSize}px`
+    piece.style.height = `${pieceSize}px`
+    piece.addEventListener('mouseover', pieceHover)
+    piece.addEventListener('mouseleave', () => clearClass('highlight'))
+    piece.addEventListener('click', pieceClick)
+    return piece
   }
 
-  var pieceHover = function () {
-    clearClass('highlight')
-    if (addClassToAdjacentPieces(this, 'highlight') < minimumMatch) {
+  function pieceHover () {
+    const combo = getCombo(this)
+    if (combo.length >= minimumComboSize) {
       clearClass('highlight')
+      combo.forEach(piece => piece.classList.add('highlight'))
     }
   }
 
-  var pieceClick = function () {
+  function pieceClick () {
     if (document.querySelector('body').classList.contains('endgame')) {
       startGame()
     } else {
-      clearClass('delete')
-      var toDelete = addClassToAdjacentPieces(this, 'delete')
-      var removed = 0
-      console.log(`todelete ${toDelete}`)
-      if (toDelete >= minimumMatch) {
-        document.querySelectorAll('.delete').forEach(e => {
-          e.removeAttribute('id')
-          e.parentNode.removeChild(e)
-          removed++
-          if (removed === toDelete) {
-            rebuildIds()
-            detectEndgame()
-          }
+      if (getCombo(this).length >= minimumComboSize) {
+        deleteCombo(this, () => {
+          dropPieces()
+          detectEndgame()
         })
       }
     }
   }
 
-  var rebuildIds = function () {
-    for (var c = 1; c <= columns; c++) {
-      for (var r = rows; r >= 1; r--) {
-        var above = r - 1
-        while (above > 0 && !pieceExists(c, r)) {
-          if (pieceExists(c, above)) {
-            getPiece(c, above).setAttribute('id', pieceId(c, r))
+  function deleteCombo (piece, callback) {
+    getCombo(piece).forEach(p => {
+      p.removeAttribute('id')
+      p.classList.add('fadeout')
+      setTimeout(() => p.parentNode.removeChild(p), 300)
+    })
+    setTimeout(callback, 310)
+  }
+
+  function dropPieces () {
+    for (let c = 1; c <= columns; c++) {
+      // iterate row from bottom to top
+      for (let r = rows; r >= 1; r--) {
+        // move pieces down to fill gaps
+        let rowAbove = r - 1
+        while (rowAbove > 0 && !pieceExists(c, r)) {
+          if (pieceExists(c, rowAbove)) {
+            getPiece(c, rowAbove).setAttribute('id', pieceId(c, r))
           }
-          above--
+          rowAbove--
         }
+        // backfill empty gap at top of column
         if (!pieceExists(c, r)) {
-          var col = document.querySelector('#col' + c)
-          var piece = newPiece(c, r)
-          piece.classList.add('hide')
-          col.prepend(piece)
-          piece.classList.add('show')
-          piece.classList.remove('hide')
+          document.querySelector('#col' + c).prepend(newPiece(c, r))
         }
       }
     }
   }
 
-  var detectEndgame = function () {
-    var c, r, count
-    for (c = 1; c <= columns; c++) {
-      for (r = 1; r <= rows; r++) {
-        count = addClassToAdjacentPieces(getPiece(c, r), 'temp')
-        clearClass('temp')
-        if (count >= minimumMatch) {
+  function detectEndgame () {
+    for (let c = 1; c <= columns; c++) {
+      for (let r = 1; r <= rows; r++) {
+        if (getCombo(getPiece(c, r)).length >= minimumComboSize) {
           return false
         }
       }
     }
+    // no possible moves
     document.querySelector('body').classList.add('endgame')
     document.querySelector('#gameboard').classList.add('endgame')
     return true
   }
 
-  var addClassToAdjacentPieces = function (div, newClass, color) {
-    color = color || div.getAttribute('color')
-    if (div && div.getAttribute('color') === color && !div.classList.contains(newClass)) {
-      var c = +piecePos(div).column
-      var r = +piecePos(div).row
+  function getCombo (piece) {
+    addClassToCombo(piece, 'temp')
+    var pieces = document.querySelectorAll('.temp')
+    clearClass('temp')
+    return pieces
+  }
 
-      div.classList.add(newClass)
-      return 1 +
-            addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color) +
-            addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color) +
-            addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color) +
-            addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color)
-    } else {
-      return 0
+  function addClassToCombo (piece, newClass, color) {
+    color = color || piece.getAttribute('color')
+    if (piece && piece.getAttribute('color') === color && !piece.classList.contains(newClass)) {
+      piece.classList.add(newClass)
+
+      const position = piecePosition(piece)
+      const c = position.column
+      const r = position.row
+      addClassToCombo(getPiece(c, r - 1), newClass, color)
+      addClassToCombo(getPiece(c, r + 1), newClass, color)
+      addClassToCombo(getPiece(c - 1, r), newClass, color)
+      addClassToCombo(getPiece(c + 1, r), newClass, color)
     }
   }
 
-  var clearClass = function (className) {
+  function clearClass (className) {
     document.querySelectorAll('.gamepiece')
       .forEach(e => e.classList.remove(className))
   }
 
-  var getPiece = function (c, r) {
+  function getPiece (c, r) {
     return document.querySelector(`[id="${pieceId(c, r)}"]`)
   }
 
-  var pieceExists = function (c, r) {
-    return document.querySelectorAll(`[id="${pieceId(c, r)}"]`).length > 0
+  function pieceExists (c, r) {
+    return !!getPiece(c, r)
   }
 
-  var pieceId = function (c, r) {
+  function pieceId (c, r) {
     return c.toString() + '_' + r.toString()
   }
 
-  var piecePos = function (div) {
-    var id = div.getAttribute('id') || ''
-    var pos = []
-    pos.column = +id.split('_')[0] || 0
-    pos.row = +id.split('_')[1] || 0
-    return pos
+  function piecePosition (piece) {
+    const id = piece.getAttribute('id') || ''
+    const cr = id.split('_')
+    return {
+      column: +cr[0] || 0,
+      row: +cr[1] || 0
+    }
   }
 
-  var randomColor = function () {
+  function randomColor () {
+    // the last color has 1/10th probability
     return colors[Math.floor(Math.random() * (colors.length - 0.9))]
   }
 
-  // re-generate random colors outside of gameboard
-  var recolorTitle = function () {
+  function recolorTitleAndFavicon () {
+    recolorTitle()
+    recolorFavicon()
+  }
+
+  function recolorTitle () {
     document.querySelectorAll('.random').forEach(e => {
-      for (const color of colors) {
-        e.classList.remove(color)
-      }
+      e.classList.remove(...colors)
       e.classList.add(randomColor())
     })
   }
 
-  // debugging recolor
-  document.querySelector('body').click(function () {
-    recolorTitle()
-    recolorFavicon()
-  })
-
-  // randomise the favicon
-  var recolorFavicon = function () {
-    var ico = randomColor().concat('.png')
-    document.querySelector('#randomfavicon').setAttribute('href', ico)
+  function recolorFavicon () {
+    document.querySelector('#randomfavicon')
+      .setAttribute('href', randomColor().concat('.png'))
   }
 }
 

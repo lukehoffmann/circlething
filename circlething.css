@@ -74,9 +74,7 @@ body.endgame {
 }
 
 /* fade */
-.show {
-    transition: opacity 1000ms;
-  }
-.hide {
+.fadeout {
+    transition: opacity 300ms;
     opacity: 0;
-  }
+}
