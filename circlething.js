@@ -1,198 +1,210 @@
-var circlething = function () {
+'use strict'
 
-    var columns = 3,
-        rows = 6,
-        pieceSize = 70, //px
-        colors = ['red', 'orange', 'pink', 'purple'],
-        minimumMatch = 3;
+const Circlething = function () {
+  const columns = 3
+  const rows = 6
+  const pieceSize = 70 // px
+  const colors = ['red', 'orange', 'pink', 'purple']
+  const minimumComboSize = 3
 
-    $(document).ready(function () {
-        $('#gameboard').css('width', columns * pieceSize + 'px')
-                       .css('height', rows * pieceSize + 'px');
+  if (document.readyState !== 'loading') {
+    onReady()
+  } else {
+    document.addEventListener('DOMContentLoaded', onReady)
+  }
 
-        startGame();
+  function onReady () {
+    const board = document.querySelector('#gameboard')
+    board.style.width = `${columns * pieceSize}px`
+    board.style.height = `${rows * pieceSize}px`
 
-        $('#gameboard').mouseleave(function () {
-            clearClass('highlight');
-        });
-    });
+    recolorTitleAndFavicon()
+    document.addEventListener('click', recolorTitleAndFavicon)
 
-    var startGame = function () {
-      
-        recolorTitle();
-        recolorFavicon();
-        
+    startGame()
+  }
 
-        $('.gamepiece').remove();
-        $('.column').remove();
+  function startGame () {
+    // clear everything from previous games
+    document.querySelector('body').classList.remove('endgame')
+    document.querySelector('#gameboard').classList.remove('endgame')
+    document.querySelectorAll('.gamepiece')
+      .forEach(e => e.parentElement.removeChild(e))
+    document.querySelectorAll('.column')
+      .forEach(e => e.parentElement.removeChild(e))
 
-        var c, r, column, piece;
-        for (c = 1; c <= columns; c++) {
-            column = newColumn(c);
-            column.appendTo('#gameboard');
-            for (r = 1; r <= rows; r++) {
-                piece = newPiece(c, r);
-                piece.hide()
-                     .appendTo(column)
-                     .fadeIn('slow');
-            }
-        }
-        while (detectEndgame()) {
-            startGame();
-        }
-    };
-
-    var newColumn = function (c) {
-        return $('<div/>').addClass('column')
-                          .attr('id', 'col' + c)
-                          .css('width', pieceSize + 'px')
-                          .css('height', rows * pieceSize + 'px');
-    };
-
-    var newPiece = function (c, r) {
-        var color = randomColor() + "gamepiece";
-        return $('<div/>').addClass('gamepiece')
-                          .addClass(color)
-                          .data('color', color)
-                          .attr('id', pieceId(c, r))
-                          .css('width', pieceSize + 'px')
-                          .css('height', pieceSize + 'px')
-                          .hover(pieceHover)
-                          .click(pieceClick);
-    };
-
-    var pieceHover = function () {
-        clearClass('highlight');
-        if (addClassToAdjacentPieces($(this), 'highlight') < minimumMatch) {
-            clearClass('highlight');
-        }
-    };
-
-    var pieceClick = function () {
-        if ($('body').hasClass('endgame')) {
-            startGame();
-            $('body').removeClass('endgame');
-            $('#gameboard').removeClass('endgame');
-        } else {
-            clearClass('delete');
-            var toDelete = addClassToAdjacentPieces($(this), 'delete'),
-                removed = 0;
-
-            if (toDelete >= minimumMatch) {
-                $('.delete').attr('id', '')
-                            .fadeOut('fast', function () {
-                                this.remove();
-                                removed++;
-                                if (removed === toDelete) {
-                                    rebuildIds();
-                                    detectEndgame();
-                                }
-                            });
-            }
-        }
-    };
-
-    var rebuildIds = function () {
-        for (var c = 1; c <= columns; c++) {
-            for (var r = rows; r >= 1; r--) {
-                var above = r - 1;
-                while (above > 0 && !pieceExists(c, r)) {
-                    if (pieceExists(c, above)) {
-                        getPiece(c, above).attr('id', pieceId(c, r));
-                    }
-                    above--;
-                }
-                if (!pieceExists(c, r)) {
-                    newPiece(c, r).hide()
-                                  .prependTo($('#col' + c))
-                                  .fadeIn('slow');
-                }
-            }
-        }
-    };
-
-    var detectEndgame = function () {
-        var c, r, count;
-        for (c = 1; c <= columns; c++) {
-            for (r = 1; r <= rows; r++) {
-                count = addClassToAdjacentPieces(getPiece(c, r), 'temp');
-                clearClass('temp');
-                if (count >= minimumMatch) {
-                    return false;
-                }
-            }
-        }
-        $('body').addClass('endgame');
-        $('#gameboard').addClass('endgame');
-        return true;
-    };
-
-    var addClassToAdjacentPieces = function (div, newClass, color) {
-        color = color || div.data('color');
-
-        if (div && div.data('color') === color && !div.hasClass(newClass)) {
-            var c = +piecePos(div).column,
-                r = +piecePos(div).row;
-
-            div.addClass(newClass);
-            return 1
-            + addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color)
-            + addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color)
-            + addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color)
-            + addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color);
-        } else {
-            return 0;
-        }
-    };
-
-    var clearClass = function (className) {
-        $('.gamepiece').removeClass(className);
-    };
-
-    var getPiece = function (c, r) {
-        return $("#" + pieceId(c, r));
-    };
-
-    var pieceExists = function (c, r) {
-        return $("#" + pieceId(c, r)).length > 0;
-    };
-
-    var pieceId = function (c, r) {
-        return c.toString() + '_' + r.toString();
-    };
-
-    var piecePos = function (div) {
-        var id = div.attr('id') || '',
-        pos = [];
-        pos.column = +id.split('_')[0] || 0;
-        pos.row = +id.split('_')[1] || 0;
-        return pos;
-    };
-
-    var randomColor = function () {
-        return colors[Math.floor(Math.random() * (colors.length - 0.9))];
-    };
-
-    //re-generate random colors outside of gameboard
-    var recolorTitle = function() {
-        $('.random').each(function () {
-            $(this).removeClass(colors.join(" "))
-            $(this).addClass(randomColor());
-        });
+    // populate a new board
+    for (let c = 1; c <= columns; c++) {
+      const column = newColumn(c)
+      document.querySelector('#gameboard').appendChild(column)
+      for (let r = 1; r <= rows; r++) {
+        column.append(newPiece(c, r))
+      }
     }
 
-    //debugging recolor
-    $('body').click(function () {
-        recolorTitle();
-        recolorFavicon();
-        });
-
-    //randomise the favicon
-    var recolorFavicon = function() {
-        var ico = randomColor().concat('.png')
-        $('#randomfavicon').attr('href', ico);
+    // if the board is unplayable, try again
+    while (detectEndgame()) {
+      startGame()
     }
-    
-    
-    
-}();
+  }
+
+  function newColumn (c) {
+    const column = document.createElement('div')
+    column.classList.add('column')
+    column.setAttribute('id', `col${c}`)
+    column.style.width = `${pieceSize}px`
+    column.style.height = `${rows * pieceSize}px`
+    return column
+  }
+
+  function newPiece (c, r) {
+    const color = randomColor()
+    const piece = document.createElement('div')
+    piece.classList.add('gamepiece')
+    piece.classList.add(`${color}gamepiece`)
+    piece.setAttribute('color', color)
+    piece.setAttribute('id', pieceId(c, r))
+    piece.style.width = `${pieceSize}px`
+    piece.style.height = `${pieceSize}px`
+    piece.addEventListener('mouseover', pieceHover)
+    piece.addEventListener('mouseleave', () => clearClass('highlight'))
+    piece.addEventListener('click', pieceClick)
+    return piece
+  }
+
+  function pieceHover () {
+    const combo = getCombo(this)
+    if (combo.length >= minimumComboSize) {
+      clearClass('highlight')
+      combo.forEach(piece => piece.classList.add('highlight'))
+    }
+  }
+
+  function pieceClick () {
+    if (document.querySelector('body').classList.contains('endgame')) {
+      startGame()
+    } else {
+      if (getCombo(this).length >= minimumComboSize) {
+        deleteCombo(this, () => {
+          dropPieces()
+          detectEndgame()
+        })
+      }
+    }
+  }
+
+  function deleteCombo (piece, callback) {
+    getCombo(piece).forEach(p => {
+      p.removeAttribute('id')
+      p.classList.add('fadeout')
+      setTimeout(() => p.parentNode.removeChild(p), 300)
+    })
+    setTimeout(callback, 310)
+  }
+
+  function dropPieces () {
+    for (let c = 1; c <= columns; c++) {
+      // iterate row from bottom to top
+      for (let r = rows; r >= 1; r--) {
+        // move pieces down to fill gaps
+        let rowAbove = r - 1
+        while (rowAbove > 0 && !pieceExists(c, r)) {
+          if (pieceExists(c, rowAbove)) {
+            getPiece(c, rowAbove).setAttribute('id', pieceId(c, r))
+          }
+          rowAbove--
+        }
+        // backfill empty gap at top of column
+        if (!pieceExists(c, r)) {
+          document.querySelector('#col' + c).prepend(newPiece(c, r))
+        }
+      }
+    }
+  }
+
+  function detectEndgame () {
+    for (let c = 1; c <= columns; c++) {
+      for (let r = 1; r <= rows; r++) {
+        if (getCombo(getPiece(c, r)).length >= minimumComboSize) {
+          return false
+        }
+      }
+    }
+    // no possible moves
+    document.querySelector('body').classList.add('endgame')
+    document.querySelector('#gameboard').classList.add('endgame')
+    return true
+  }
+
+  function getCombo (piece) {
+    addClassToCombo(piece, 'temp')
+    var pieces = document.querySelectorAll('.temp')
+    clearClass('temp')
+    return pieces
+  }
+
+  function addClassToCombo (piece, newClass, color) {
+    color = color || piece.getAttribute('color')
+    if (piece && piece.getAttribute('color') === color && !piece.classList.contains(newClass)) {
+      piece.classList.add(newClass)
+
+      const position = piecePosition(piece)
+      const c = position.column
+      const r = position.row
+      addClassToCombo(getPiece(c, r - 1), newClass, color)
+      addClassToCombo(getPiece(c, r + 1), newClass, color)
+      addClassToCombo(getPiece(c - 1, r), newClass, color)
+      addClassToCombo(getPiece(c + 1, r), newClass, color)
+    }
+  }
+
+  function clearClass (className) {
+    document.querySelectorAll('.gamepiece')
+      .forEach(e => e.classList.remove(className))
+  }
+
+  function getPiece (c, r) {
+    return document.querySelector(`[id="${pieceId(c, r)}"]`)
+  }
+
+  function pieceExists (c, r) {
+    return !!getPiece(c, r)
+  }
+
+  function pieceId (c, r) {
+    return c.toString() + '_' + r.toString()
+  }
+
+  function piecePosition (piece) {
+    const id = piece.getAttribute('id') || ''
+    const cr = id.split('_')
+    return {
+      column: +cr[0] || 0,
+      row: +cr[1] || 0
+    }
+  }
+
+  function randomColor () {
+    // the last color has 1/10th probability
+    return colors[Math.floor(Math.random() * (colors.length - 0.9))]
+  }
+
+  function recolorTitleAndFavicon () {
+    recolorTitle()
+    recolorFavicon()
+  }
+
+  function recolorTitle () {
+    document.querySelectorAll('.random').forEach(e => {
+      e.classList.remove(...colors)
+      e.classList.add(randomColor())
+    })
+  }
+
+  function recolorFavicon () {
+    document.querySelector('#randomfavicon')
+      .setAttribute('href', randomColor().concat('.png'))
+  }
+}
+
+Circlething()

@@ -72,3 +72,9 @@ body.endgame {
 .highlight {
     background-color: #BBB;
 }
+
+/* fade */
+.fadeout {
+    transition: opacity 300ms;
+    opacity: 0;
+}
