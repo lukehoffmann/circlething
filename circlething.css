@@ -1,5 +1,5 @@
 body {
-    /*height: 90%;*/
+    height: 90%;
     width: 90%;
     background-color: #F9F9F9;
     margin: auto;
@@ -7,11 +7,17 @@ body {
 
 h1 {
     width: 100%;
+    font-size: 5rem;
     text-align: center;
     text-transform: lowercase;
-    font-size: 5em;
     font-family: Georgia, 'Times New Roman', serif;
     font-weight: normal;
+}
+
+/* Scale the title on mobile */
+@media (max-width: 800px) {
+    h1 { font-size: 18vw; }
+    /* body { background-color: lightgray;} */
 }
 
 #gameboard {
