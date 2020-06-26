@@ -12,6 +12,7 @@ h1 {
     text-transform: lowercase;
     font-family: Georgia, 'Times New Roman', serif;
     font-weight: normal;
+    margin: 0.2rem;
 }
 
 /* Scale the title on mobile */
