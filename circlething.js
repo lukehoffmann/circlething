@@ -3,7 +3,6 @@
 const Circlething = function () {
   const columns = 3
   const rows = 6
-  const pieceSize = 70 // px
   const colors = ['red', 'orange', 'pink', 'purple']
   const minimumComboSize = 3
 
@@ -14,10 +13,6 @@ const Circlething = function () {
   }
 
   function onReady () {
-    const board = document.querySelector('#gameboard')
-    board.style.width = `${columns * pieceSize}px`
-    board.style.height = `${rows * pieceSize}px`
-
     recolorTitleAndFavicon()
     document.addEventListener('click', recolorTitleAndFavicon)
 
@@ -52,8 +47,6 @@ const Circlething = function () {
     const column = document.createElement('div')
     column.classList.add('column')
     column.setAttribute('id', `col${c}`)
-    column.style.width = `${pieceSize}px`
-    column.style.height = `${rows * pieceSize}px`
     return column
   }
 
@@ -64,8 +57,6 @@ const Circlething = function () {
     piece.classList.add(`${color}gamepiece`)
     piece.setAttribute('color', color)
     piece.setAttribute('id', pieceId(c, r))
-    piece.style.width = `${pieceSize}px`
-    piece.style.height = `${pieceSize}px`
     piece.addEventListener('mouseover', pieceHover)
     piece.addEventListener('mouseleave', () => clearClass('highlight'))
     piece.addEventListener('click', pieceClick)

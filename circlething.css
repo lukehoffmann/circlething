@@ -1,13 +1,10 @@
 body {
-    height: 90%;
-    width: 90%;
     background-color: #F9F9F9;
-    margin: auto;
 }
 
 h1 {
     width: 100%;
-    font-size: 5rem;
+    font-size: 5em;
     text-align: center;
     text-transform: lowercase;
     font-family: Georgia, 'Times New Roman', serif;
@@ -15,15 +12,37 @@ h1 {
     margin: 0.2rem;
 }
 
-/* Scale the title on mobile */
-@media (max-width: 800px) {
-    h1 { font-size: 18vw; }
-    /* body { background-color: lightgray;} */
-}
-
 #gameboard {
+    width: 210px;
     background-color: #F0F0F0;
     margin: 5% auto 0 auto;
+}
+
+.column {
+    float: left;
+    display: table;
+}
+
+.gamepiece {
+    height: 70px;
+    width: 70px;
+    border-radius: 50%;
+}
+
+/* Scale on mobile */
+@media (max-width: 700px)
+    and (orientation: portrait)
+{
+    h1 {
+        font-size: 18vw;
+    }
+    #gameboard {
+        width: 70vw;
+    }
+    .gamepiece {
+        height: 23vw;
+        width: 23vw;
+    }
 }
 
 body.endgame {
@@ -32,11 +51,6 @@ body.endgame {
 
 #gameboard.endgame {
     background-color: #AAAAAA;
-}
-
-.column {
-    float: left;
-    display: table;
 }
 
 .orange {
@@ -53,11 +67,6 @@ body.endgame {
 
 .purple {
     color: #cc52cc;
-}
-
-.gamepiece {
-    border-radius: 50%;
-    background-color: #FF9C5B;
 }
 
 .orangegamepiece {
