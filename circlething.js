@@ -57,13 +57,13 @@ const Circlething = function () {
     piece.classList.add(`${color}gamepiece`)
     piece.setAttribute('color', color)
     piece.setAttribute('id', pieceId(c, r))
-    piece.addEventListener('mouseover', pieceHover)
-    piece.addEventListener('mouseleave', () => clearClass('highlight'))
+    piece.addEventListener('mouseover', hover)
+    piece.addEventListener('mouseleave', unhover)
     piece.addEventListener('click', pieceClick)
     return piece
   }
 
-  function pieceHover () {
+  function hover () {
     const combo = getCombo(this)
     if (combo.length >= minimumComboSize) {
       clearClass('highlight')
@@ -71,26 +71,34 @@ const Circlething = function () {
     }
   }
 
-  function pieceClick () {
+  function unhover () {
+    clearClass('highlight')
+  }
+
+  async function pieceClick () {
     if (document.querySelector('body').classList.contains('endgame')) {
       startGame()
     } else {
       if (getCombo(this).length >= minimumComboSize) {
-        deleteCombo(this, () => {
-          dropPieces()
-          detectEndgame()
-        })
+        await deleteCombo(this)
+        dropPieces()
+        detectEndgame()
       }
     }
   }
 
-  function deleteCombo (piece, callback) {
-    getCombo(piece).forEach(p => {
-      p.removeAttribute('id')
-      p.classList.add('fadeout')
-      setTimeout(() => p.parentNode.removeChild(p), 300)
-    })
-    setTimeout(callback, 310)
+  async function deleteCombo (piece) {
+    const combo = getCombo(piece)
+    // wait for all the pieces to finish deleting
+    await Promise.allSettled(combo.map(deletePiece))
+  }
+
+  async function deletePiece (p) {
+    p.removeAttribute('id')
+    p.classList.add('fadeout')
+    // allow the fadeout before removing the element
+    await new Promise(resolve => setTimeout(resolve, 300))
+    return p.parentNode.removeChild(p)
   }
 
   function dropPieces () {
@@ -131,7 +139,7 @@ const Circlething = function () {
     addClassToCombo(piece, 'temp')
     var pieces = document.querySelectorAll('.temp')
     clearClass('temp')
-    return pieces
+    return Array.from(pieces)
   }
 
   function addClassToCombo (piece, newClass, color) {
