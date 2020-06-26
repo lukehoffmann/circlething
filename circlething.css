@@ -2,20 +2,23 @@ body {
     background-color: #F9F9F9;
 }
 
-h1 {
-    width: 100%;
-    font-size: 5em;
+#circlething {
+    margin: auto;
     text-align: center;
-    text-transform: lowercase;
+}
+
+h1 {
+    font-size: 5em;
     font-family: Georgia, 'Times New Roman', serif;
     font-weight: normal;
-    margin: 0.2rem;
+    text-align: center;
+    text-transform: lowercase;
 }
 
 #gameboard {
-    width: 210px;
     background-color: #F0F0F0;
     margin: 5% auto 0 auto;
+    display: inline-block;
 }
 
 .column {
@@ -35,9 +38,7 @@ h1 {
 {
     h1 {
         font-size: 18vw;
-    }
-    #gameboard {
-        width: 70vw;
+        margin: 0.2rem;
     }
     .gamepiece {
         height: 23vw;
