@@ -17,13 +17,19 @@ h1 {
 
 #gameboard {
     background-color: #F0F0F0;
+    height: 420px;
+    width: 210px;
     margin: 5% auto 0 auto;
     display: inline-block;
 }
 
 .column {
+    height: 420px;
+    width: 70px;
     float: left;
-    display: table;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
 }
 
 .gamepiece {
@@ -33,9 +39,7 @@ h1 {
 }
 
 /* Scale on mobile */
-@media (max-width: 700px)
-    and (orientation: portrait)
-{
+@media (max-width: 700px) and (orientation: portrait) {
     h1 {
         font-size: 18vw;
         margin: 0.2rem;
@@ -92,6 +96,11 @@ body.endgame {
 
 /* fade */
 .fadeout {
-    transition: opacity 300ms;
+    transition: opacity 500ms ease;
     opacity: 0;
+}
+
+.dropping {
+    transition: 500ms ease-in;
+    transform: translateY(70px);
 }

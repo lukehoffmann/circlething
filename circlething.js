@@ -33,7 +33,7 @@ const Circlething = function () {
       const column = newColumn(c)
       document.querySelector('#gameboard').appendChild(column)
       for (let r = 1; r <= rows; r++) {
-        column.append(newPiece(c, r))
+        column.prepend(newPiece(c, r))
       }
     }
 
@@ -76,32 +76,63 @@ const Circlething = function () {
   }
 
   async function pieceClick () {
+    clearClass('highlight')
     if (document.querySelector('body').classList.contains('endgame')) {
       startGame()
     } else {
-      if (getCombo(this).length >= minimumComboSize) {
-        await deleteCombo(this)
-        dropPieces()
+      const combo = getCombo(this)
+      if (combo.length >= minimumComboSize) {
+        const drops = getDrop(combo)
+        await animateDelete(combo)
+        await animateDropPieces(drops)
+        deleteCombo(combo)
+        fillPieces()
         detectEndgame()
       }
     }
   }
 
-  async function deleteCombo (piece) {
-    const combo = getCombo(piece)
+  function getDrop (combo) {
+    const comboPositions = combo.map(piecePosition)
+    let drops = []
+    for (let c = 1; c <= columns; c++) {
+      const removed = comboPositions.filter(p => p.column === c)
+      if (removed.length === 0) {
+        continue
+      }
+
+      let highest = removed.reduce((min, p) => Math.min(min, p.row), rows + 1)
+      for (let r = 1; r < highest; r++) {
+        drops.push(getPiece(c, r))
+      }
+    }
+    return drops
+  }
+
+  async function animateDelete (combo) {
     // wait for all the pieces to finish deleting
-    await Promise.allSettled(combo.map(deletePiece))
+    await Promise.allSettled(combo.map(async p => {
+      p.removeAttribute('id')
+      p.classList.add('fadeout')
+      // allow the fadeout before removing the element
+      await new Promise(resolve => setTimeout(resolve, 500))
+      p.classList.add('fadeout')
+    }))
   }
 
-  async function deletePiece (p) {
-    p.removeAttribute('id')
-    p.classList.add('fadeout')
-    // allow the fadeout before removing the element
-    await new Promise(resolve => setTimeout(resolve, 300))
-    return p.parentNode.removeChild(p)
+  async function animateDropPieces (pieces) {
+    await Promise.allSettled(pieces.map(async function (piece) {
+      piece.classList.add('dropping')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      piece.classList.remove('dropping')
+    }))
   }
 
-  function dropPieces () {
+  function deleteCombo (combo) {
+    combo.forEach(p => p.parentNode.removeChild(p))
+  }
+
+  async function fillPieces () {
     for (let c = 1; c <= columns; c++) {
       // iterate row from bottom to top
       for (let r = rows; r >= 1; r--) {
@@ -115,7 +146,7 @@ const Circlething = function () {
         }
         // backfill empty gap at top of column
         if (!pieceExists(c, r)) {
-          document.querySelector('#col' + c).prepend(newPiece(c, r))
+          document.querySelector('#col' + c).append(newPiece(c, r))
         }
       }
     }
@@ -185,7 +216,7 @@ const Circlething = function () {
 
   function randomColor () {
     // the last color has 1/10th probability
-    return colors[Math.floor(Math.random() * (colors.length - 0.9))]
+    return colors[Math.floor(random() * (colors.length - 0.9))]
   }
 
   function recolorTitleAndFavicon () {
@@ -204,6 +235,12 @@ const Circlething = function () {
     document.querySelector('#randomfavicon')
       .setAttribute('href', randomColor().concat('.png'))
   }
+}
+
+var seed = 1
+function random () {
+  var x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
 }
 
 Circlething()
