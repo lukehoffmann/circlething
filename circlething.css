@@ -16,6 +16,12 @@ h1 {
     align-items: center;
 }
 
+#score {
+    font-size: 4em;
+    font-family: Georgia, 'Times New Roman', serif;
+    display: inline-block;
+}
+
 #gameboard {
     background-color: #F0F0F0;
     margin: 5% 0 0 0;

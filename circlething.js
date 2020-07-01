@@ -5,6 +5,7 @@ const Circlething = function () {
   const rows = 6
   const colors = ['red', 'orange', 'pink', 'purple']
   const minimumComboSize = 3
+  let score = 0
 
   if (document.readyState !== 'loading') {
     onReady()
@@ -21,6 +22,7 @@ const Circlething = function () {
 
   function startGame () {
     // clear everything from previous games
+    clearScore(0)
     document.querySelector('body').classList.remove('endgame')
     document.querySelector('#gameboard').classList.remove('endgame')
     document.querySelectorAll('.gamepiece')
@@ -75,8 +77,10 @@ const Circlething = function () {
     if (document.querySelector('body').classList.contains('endgame')) {
       startGame()
     } else {
-      if (getCombo(this).length >= minimumComboSize) {
-        deleteCombo(this, () => {
+      const combo = getCombo(this)
+      if (combo.length >= minimumComboSize) {
+        recordsScore(combo)
+        deleteCombo(combo, () => {
           dropPieces()
           detectEndgame()
         })
@@ -84,8 +88,22 @@ const Circlething = function () {
     }
   }
 
-  function deleteCombo (piece, callback) {
-    getCombo(piece).forEach(p => {
+  function clearScore () {
+    score = 0
+    document.querySelector('#score').textContent = score
+  }
+
+  function recordsScore (combo) {
+    score += combo.length * combo.length
+    const color = combo[0].getAttribute('color')
+    const scoreElement = document.querySelector('#score')
+    scoreElement.textContent = score
+    scoreElement.classList.remove(...colors)
+    scoreElement.classList.add(color)
+  }
+
+  function deleteCombo (combo, callback) {
+    combo.forEach(p => {
       p.removeAttribute('id')
       p.classList.add('fadeout')
       setTimeout(() => p.parentNode.removeChild(p), 300)
@@ -131,7 +149,7 @@ const Circlething = function () {
     addClassToCombo(piece, 'temp')
     var pieces = document.querySelectorAll('.temp')
     clearClass('temp')
-    return pieces
+    return Array.from(pieces)
   }
 
   function addClassToCombo (piece, newClass, color) {
