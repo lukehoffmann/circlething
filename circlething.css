@@ -2,11 +2,6 @@ body {
     background-color: #F9F9F9;
 }
 
-#circlething {
-    margin: auto;
-    text-align: center;
-}
-
 h1 {
     font-size: 5em;
     font-family: Georgia, 'Times New Roman', serif;
@@ -15,10 +10,15 @@ h1 {
     text-transform: lowercase;
 }
 
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 #gameboard {
     background-color: #F0F0F0;
-    margin: 5% auto 0 auto;
-    display: inline-block;
+    margin: 5% 0 0 0;
 }
 
 .column {
