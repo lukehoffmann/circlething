@@ -22,7 +22,10 @@ const Circlething = function () {
 
   function startGame () {
     // clear everything from previous games
-    clearScore(0)
+    score = 0
+    showScore(score, randomColor())
+    showHighScore(false)
+
     document.querySelector('body').classList.remove('endgame')
     document.querySelector('#gameboard').classList.remove('endgame')
     document.querySelectorAll('.gamepiece')
@@ -40,7 +43,7 @@ const Circlething = function () {
     }
 
     // if the board is unplayable, try again
-    while (detectEndgame()) {
+    while (isEndgame()) {
       startGame()
     }
   }
@@ -82,24 +85,43 @@ const Circlething = function () {
         recordsScore(combo)
         deleteCombo(combo, () => {
           dropPieces()
-          detectEndgame()
+          if (isEndgame())
+            invokeEndgame()
         })
       }
     }
   }
 
-  function clearScore () {
-    score = 0
-    document.querySelector('#score').textContent = score
-  }
-
   function recordsScore (combo) {
     score += combo.length * combo.length
-    const color = combo[0].getAttribute('color')
-    const scoreElement = document.querySelector('#score')
-    scoreElement.textContent = score
-    scoreElement.classList.remove(...colors)
-    scoreElement.classList.add(color)
+
+    let comboColor = combo[0].getAttribute('color')
+    recordHighScore(score, comboColor)
+    showScore(score, comboColor)
+  }
+  
+  function showScore (score, color) {
+    const e = document.querySelector('#score')
+    e.textContent = score
+    e.classList.remove(...colors)
+    e.classList.add(color)
+  }
+
+  function recordHighScore (score, color) {
+    if (score > localStorage.getItem('highScore') || 0) {
+      localStorage.setItem('highScore', score)
+      localStorage.setItem('highScoreColor', color)
+    }
+  }
+
+  function showHighScore(show) {
+    const highScore = localStorage.getItem('highScore') || 0
+    const highScoreColor = localStorage.getItem('highScoreColor') || randomColor()
+    document.querySelector('#highest').style.display = show ? 'block' : 'none'
+    const e = document.querySelector('#highscore')
+    e.textContent = highScore
+    e.classList.remove(...colors)
+    e.classList.add(highScoreColor)
   }
 
   function deleteCombo (combo, callback) {
@@ -108,7 +130,7 @@ const Circlething = function () {
       p.classList.add('fadeout')
       setTimeout(() => p.parentNode.removeChild(p), 300)
     })
-    setTimeout(callback, 310)
+    setTimeout(callback, 300)
   }
 
   function dropPieces () {
@@ -131,7 +153,7 @@ const Circlething = function () {
     }
   }
 
-  function detectEndgame () {
+  function isEndgame () {
     for (let c = 1; c <= columns; c++) {
       for (let r = 1; r <= rows; r++) {
         if (getCombo(getPiece(c, r)).length >= minimumComboSize) {
@@ -140,9 +162,13 @@ const Circlething = function () {
       }
     }
     // no possible moves
+    return true
+  }
+
+  function invokeEndgame () {
     document.querySelector('body').classList.add('endgame')
     document.querySelector('#gameboard').classList.add('endgame')
-    return true
+    showHighScore(true)
   }
 
   function getCombo (piece) {

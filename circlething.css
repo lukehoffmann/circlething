@@ -1,25 +1,19 @@
 body {
     background-color: #F9F9F9;
+    font-family: Georgia, 'Times New Roman', serif;
+    text-align: center;
+    text-transform: lowercase;
 }
 
 h1 {
     font-size: 5em;
-    font-family: Georgia, 'Times New Roman', serif;
     font-weight: normal;
-    text-align: center;
-    text-transform: lowercase;
 }
 
 .container {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-#score {
-    font-size: 4em;
-    font-family: Georgia, 'Times New Roman', serif;
-    display: inline-block;
 }
 
 #gameboard {
