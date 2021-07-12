@@ -117,7 +117,7 @@ const Circlething = function () {
   function showHighScore(show) {
     const highScore = localStorage.getItem('highScore') || 0
     const highScoreColor = localStorage.getItem('highScoreColor') || randomColor()
-    document.querySelector('#highest').style.display = show ? 'block' : 'none'
+    document.querySelector('#highest').style.display = show ? 'inline' : 'none'
     const e = document.querySelector('#highscore')
     e.textContent = highScore
     e.classList.remove(...colors)
