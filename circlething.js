@@ -108,6 +108,7 @@ const Circlething = function () {
   }
 
   function recordHighScore (score, color) {
+    localStorage.setItem('score', score)
     if (score > localStorage.getItem('highScore') || 0) {
       localStorage.setItem('highScore', score)
       localStorage.setItem('highScoreColor', color)
@@ -115,13 +116,20 @@ const Circlething = function () {
   }
 
   function showHighScore(show) {
+    const score = localStorage.getItem('score') || 0
     const highScore = localStorage.getItem('highScore') || 0
     const highScoreColor = localStorage.getItem('highScoreColor') || randomColor()
-    document.querySelector('#highest').style.display = show ? 'inline' : 'none'
+    const isHighest = (Number(score) >= Number(highScore))
+
+    const newhighest = document.querySelector('#newhighest')
+    newhighest.style.display = show && isHighest ? 'inline' : 'none'
+
+    const highest = document.querySelector('#highest')
+    highest.style.display = show && !isHighest ? 'block' : 'none'
+    highest.classList.remove(...colors)
+    highest.classList.add(highScoreColor)
     const e = document.querySelector('#highscore')
     e.textContent = highScore
-    e.classList.remove(...colors)
-    e.classList.add(highScoreColor)
   }
 
   function deleteCombo (combo, callback) {
