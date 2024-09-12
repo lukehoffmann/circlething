@@ -81,17 +81,24 @@ const Circlething = function () {
     piece.setAttribute('color', color)
     piece.setAttribute('id', pieceId(c, r))
     piece.addEventListener('mouseover', pieceHover)
-    piece.addEventListener('mouseleave', () => clearClass('highlight'))
+    piece.addEventListener('mouseleave', pieceHoverEnd)
     piece.addEventListener('click', pieceClick)
     return piece
   }
 
   function pieceHover () {
+    clearScorePreview()
     const combo = getCombo(this)
     if (combo.length >= minimumComboSize) {
       clearClass('highlight')
       combo.forEach(piece => piece.classList.add('highlight'))
+      showScorePreview(combo)
     }
+  }
+
+  function pieceHoverEnd () {
+    clearScorePreview()
+    clearClass('highlight')
   }
 
   function pieceClick () {
@@ -119,6 +126,7 @@ const Circlething = function () {
   }
   
   function showScore (score, color) {
+    clearScorePreview()
     const e = document.querySelector('#score')
     e.textContent = score
     e.classList.remove(...colors)
@@ -148,6 +156,21 @@ const Circlething = function () {
     highest.classList.add(highScoreColor)
     const e = document.querySelector('#highscore')
     e.textContent = highScore
+  }
+
+  function showScorePreview (combo) {
+    const e = document.querySelector('#nextscore')
+    let comboColor = combo[0].getAttribute('color')
+    e.classList.remove(...colors)
+    e.classList.add(comboColor)
+    e.textContent = ` (+${comboScores[combo.length]})`
+    e.style.display = 'inline'
+  }
+
+  function clearScorePreview () {
+    const e = document.querySelector('#nextscore')
+    e.textContent = ''
+    e.style.display = 'none'
   }
 
   function deleteCombo (combo, callback) {
