@@ -159,18 +159,20 @@ const Circlething = function () {
   }
 
   function showScorePreview (combo) {
-    const e = document.querySelector('#nextscore')
+    const score = document.querySelector('#nextscore')
     let comboColor = combo[0].getAttribute('color')
-    e.classList.remove(...colors)
-    e.classList.add(comboColor)
-    e.textContent = ` (+${comboScores[combo.length]})`
-    e.style.display = 'inline'
+    score.textContent = comboScores[combo.length]
+    const preview = document.querySelector('#scorepreview')
+    preview.classList.remove(...colors)
+    preview.classList.add(comboColor)
+    preview.style.display = 'inline'
   }
 
   function clearScorePreview () {
-    const e = document.querySelector('#nextscore')
-    e.textContent = ''
-    e.style.display = 'none'
+    const score = document.querySelector('#nextscore')
+    score.textContent = '0'
+    const preview = document.querySelector('#scorepreview')
+    preview.style.display = 'none'
   }
 
   function deleteCombo (combo, callback) {
