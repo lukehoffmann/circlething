@@ -6,6 +6,24 @@ const Circlething = function () {
   const colors = ['red', 'orange', 'pink', 'purple']
   const minimumComboSize = 3
   let score = 0
+  let comboScores = {
+    3: 10,
+    4: 20,
+    5: 40,
+    6: 80,
+    7: 130,
+    8: 190,
+    9: 270,
+    10: 380,
+    11: 500,
+    12: 650,
+    13: 820,
+    14: 1020,
+    15: 1240,
+    16: 1500,
+    17: 1780,
+    18: 2100    
+  }
 
   if (document.readyState !== 'loading') {
     onReady()
@@ -93,7 +111,7 @@ const Circlething = function () {
   }
 
   function recordsScore (combo) {
-    score += combo.length * combo.length
+    score += comboScores[combo.length]
 
     let comboColor = combo[0].getAttribute('color')
     recordHighScore(score, comboColor)
