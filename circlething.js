@@ -4,6 +4,7 @@ const Circlething = function () {
   const columns = 3
   const rows = 6
   const colors = ['red', 'orange', 'pink', 'purple']
+  const purpleMultiplier = 3
   const minimumComboSize = 3
   const comboScores = {
     // Roughly based on
@@ -221,11 +222,12 @@ const Circlething = function () {
     let combo = Array.from(document.querySelectorAll('.temp'))
     clearClass('temp')
 
+    combo.color = combo[0].getAttribute('color')
     combo.canScore = (combo.length >= minimumComboSize)
-    if (combo.canScore) {
-      combo.color = combo[0].getAttribute('color')
-      combo.score = comboScores[combo.length]
-    }
+
+    const scoreMultiplier = combo.color == 'purple' ? purpleMultiplier : 1
+    combo.score = combo.canScore ? comboScores[combo.length] * scoreMultiplier : 0
+  
     return combo
   }
 
@@ -271,8 +273,10 @@ const Circlething = function () {
   }
 
   function randomColor () {
-    // the last color has 1/10th probability
-    return colors[Math.floor(Math.random() * (colors.length - 0.9))]
+    // Use a reduced array lenght to give Purple reduced probability
+    // (because it appears last in the array)
+    const reducer = (purpleMultiplier - 1) / purpleMultiplier
+    return colors[Math.floor(Math.random() * (colors.length - reducer))]
   }
 
   function recolorTitleAndFavicon () {
