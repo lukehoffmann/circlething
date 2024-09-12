@@ -5,25 +5,27 @@ const Circlething = function () {
   const rows = 6
   const colors = ['red', 'orange', 'pink', 'purple']
   const minimumComboSize = 3
-  let score = 0
-  let comboScores = {
+  const comboScores = {
+    // Roughly based on
+    //    score = (combosize - 1) ^ 2.7
     3: 10,
     4: 20,
     5: 40,
-    6: 80,
-    7: 130,
-    8: 190,
-    9: 270,
-    10: 380,
-    11: 500,
-    12: 650,
-    13: 820,
-    14: 1020,
-    15: 1240,
-    16: 1500,
-    17: 1780,
-    18: 2100    
+    6: 75,
+    7: 120,
+    8: 180,
+    9: 250,
+    10: 350,
+    11: 460,
+    12: 600,
+    13: 750,
+    14: 900,
+    15: 1200,
+    16: 1350,
+    17: 1600,
+    18: 2000,
   }
+  let score = 0
 
   if (document.readyState !== 'loading') {
     onReady()
@@ -89,7 +91,7 @@ const Circlething = function () {
   function pieceHover () {
     clearScorePreview()
     const combo = getCombo(this)
-    if (combo.length >= minimumComboSize) {
+    if (combo.canScore) {
       clearClass('highlight')
       combo.forEach(piece => piece.classList.add('highlight'))
       showScorePreview(combo)
@@ -106,7 +108,7 @@ const Circlething = function () {
       startGame()
     } else {
       const combo = getCombo(this)
-      if (combo.length >= minimumComboSize) {
+      if (combo.canScore) {
         recordsScore(combo)
         deleteCombo(combo, () => {
           dropPieces()
@@ -118,19 +120,16 @@ const Circlething = function () {
   }
 
   function recordsScore (combo) {
-    score += comboScores[combo.length]
-
-    let comboColor = combo[0].getAttribute('color')
-    recordHighScore(score, comboColor)
-    showScore(score, comboColor)
+    score += combo.score
+    recordHighScore(score, combo.color)
+    showScore(score, combo.color)
   }
   
   function showScore (score, color) {
     clearScorePreview()
     const e = document.querySelector('#score')
     e.textContent = score
-    e.classList.remove(...colors)
-    e.classList.add(color)
+    setColor(e, color)
   }
 
   function recordHighScore (score, color) {
@@ -147,32 +146,27 @@ const Circlething = function () {
     const highScoreColor = localStorage.getItem('highScoreColor') || randomColor()
     const isHighest = (Number(score) >= Number(highScore))
 
-    const newhighest = document.querySelector('#newhighest')
-    newhighest.style.display = show && isHighest ? 'inline' : 'none'
+    const oldHighest = document.querySelector('#highest')
+    oldHighest.style.display = show && !isHighest ? 'block' : 'none'
+    setColor(oldHighest, highScoreColor)
 
-    const highest = document.querySelector('#highest')
-    highest.style.display = show && !isHighest ? 'block' : 'none'
-    highest.classList.remove(...colors)
-    highest.classList.add(highScoreColor)
-    const e = document.querySelector('#highscore')
-    e.textContent = highScore
+    document.querySelector('#newhighest')
+      .style.display = show && isHighest ? 'inline' : 'none'
+
+    document.querySelector('#highscore').textContent = highScore
   }
 
   function showScorePreview (combo) {
-    const score = document.querySelector('#nextscore')
-    let comboColor = combo[0].getAttribute('color')
-    score.textContent = comboScores[combo.length]
+    document.querySelector('#nextscore').textContent = combo.score
+    
     const preview = document.querySelector('#scorepreview')
-    preview.classList.remove(...colors)
-    preview.classList.add(comboColor)
+    setColor(preview, combo.color)
     preview.style.display = 'inline'
   }
 
   function clearScorePreview () {
-    const score = document.querySelector('#nextscore')
-    score.textContent = '0'
-    const preview = document.querySelector('#scorepreview')
-    preview.style.display = 'none'
+    document.querySelector('#nextscore').textContent = '0'
+    document.querySelector('#scorepreview').style.display = 'none'
   }
 
   function deleteCombo (combo, callback) {
@@ -207,7 +201,7 @@ const Circlething = function () {
   function isEndgame () {
     for (let c = 1; c <= columns; c++) {
       for (let r = 1; r <= rows; r++) {
-        if (getCombo(getPiece(c, r)).length >= minimumComboSize) {
+        if (getCombo(getPiece(c, r)).canScore) {
           return false
         }
       }
@@ -224,9 +218,15 @@ const Circlething = function () {
 
   function getCombo (piece) {
     addClassToCombo(piece, 'temp')
-    var pieces = document.querySelectorAll('.temp')
+    let combo = Array.from(document.querySelectorAll('.temp'))
     clearClass('temp')
-    return Array.from(pieces)
+
+    combo.canScore = (combo.length >= minimumComboSize)
+    if (combo.canScore) {
+      combo.color = combo[0].getAttribute('color')
+      combo.score = comboScores[combo.length]
+    }
+    return combo
   }
 
   function addClassToCombo (piece, newClass, color) {
@@ -281,10 +281,13 @@ const Circlething = function () {
   }
 
   function recolorTitle () {
-    document.querySelectorAll('.random').forEach(e => {
-      e.classList.remove(...colors)
-      e.classList.add(randomColor())
-    })
+    document.querySelectorAll('.random')
+      .forEach(e => setColor(e, randomColor()))
+  }
+
+  function setColor (element, color) {
+    element.classList.remove(...colors)
+    element.classList.add(color)
   }
 
   function recolorFavicon () {
