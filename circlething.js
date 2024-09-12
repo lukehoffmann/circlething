@@ -200,15 +200,16 @@ const Circlething = function () {
   }
 
   function isEndgame () {
-    for (let c = 1; c <= columns; c++) {
-      for (let r = 1; r <= rows; r++) {
-        if (getCombo(getPiece(c, r)).canScore) {
-          return false
-        }
+    const pieces = document.querySelectorAll('.gamepiece')
+    // Why is this not working?
+    // return !(pieces.some(element => getCombo(element).canScore))
+    let endgame = true
+    pieces.forEach(element => {
+      if (getCombo(element).canScore) {
+        endgame = false
       }
-    }
-    // no possible moves
-    return true
+    });
+    return endgame
   }
 
   function invokeEndgame () {
