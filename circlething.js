@@ -1,6 +1,6 @@
 'use strict'
 
-const version = 0.1
+const version = 0.11
 
 // Invalidate storage from older versions
 if ((localStorage.getItem('version') || -1) < version) {
