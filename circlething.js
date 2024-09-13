@@ -1,5 +1,13 @@
 'use strict'
 
+const version = 0.1
+
+// Invalidate storage from older versions
+if ((localStorage.getItem('version') || -1) < version) {
+  localStorage.clear()
+  localStorage.setItem('version', version)
+}
+
 const Circlething = function () {
   const columns = 3
   const rows = 6
@@ -134,7 +142,6 @@ const Circlething = function () {
   }
 
   function recordHighScore (score, color) {
-    localStorage.setItem('score', score)
     if (score > localStorage.getItem('highScore') || 0) {
       localStorage.setItem('highScore', score)
       localStorage.setItem('highScoreColor', color)
@@ -142,10 +149,9 @@ const Circlething = function () {
   }
 
   function showHighScore(show) {
-    const score = localStorage.getItem('score') || 0
     const highScore = localStorage.getItem('highScore') || 0
     const highScoreColor = localStorage.getItem('highScoreColor') || randomColor()
-    const isHighest = (Number(score) >= Number(highScore))
+    const isHighest = (score >= Number(highScore))
 
     const newhighest = document.querySelector('#newhighest')
     newhighest.style.display = show && isHighest ? 'inline' : 'none'
