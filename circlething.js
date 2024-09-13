@@ -57,10 +57,8 @@ const Circlething = function () {
 
     document.querySelector('body').classList.remove('endgame')
     document.querySelector('#gameboard').classList.remove('endgame')
-    document.querySelectorAll('.gamepiece')
-      .forEach(e => e.parentElement.removeChild(e))
-    document.querySelectorAll('.column')
-      .forEach(e => e.parentElement.removeChild(e))
+    document.querySelectorAll('.gamepiece').forEach(e => e.remove())
+    document.querySelectorAll('.column').forEach(e => e.remove())
 
     // populate a new board
     for (let c = 1; c <= columns; c++) {
@@ -179,8 +177,9 @@ const Circlething = function () {
   function deleteCombo (combo, callback) {
     combo.forEach(p => {
       p.removeAttribute('id')
+      p.removeAttribute('.gamepiece')
       p.classList.add('fadeout')
-      setTimeout(() => p.parentNode.removeChild(p), 300)
+      setTimeout(() => p.remove(), 300)
     })
     setTimeout(callback, 300)
   }
@@ -206,16 +205,9 @@ const Circlething = function () {
   }
 
   function isEndgame () {
-    const pieces = document.querySelectorAll('.gamepiece')
-    // Why is this not working?
-    // return !(pieces.some(element => getCombo(element).canScore))
-    let endgame = true
-    pieces.forEach(element => {
-      if (getCombo(element).canScore) {
-        endgame = false
-      }
-    });
-    return endgame
+    const pieces = document.querySelector('#gameboard').querySelectorAll('.gamepiece')
+    return !Array.from(pieces)
+      .some(element => getCombo(element).canScore)
   }
 
   function invokeEndgame () {
@@ -304,6 +296,12 @@ const Circlething = function () {
   function recolorFavicon () {
     document.querySelector('#randomfavicon')
       .setAttribute('href', randomColor().concat('.png'))
+  }
+
+  function debug (message) {
+    const debugText = document.querySelector('#debug')
+    debugText.textContent = message
+    debugText.style.display = message ? 'block' : 'inline'
   }
 }
 
