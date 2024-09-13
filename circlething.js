@@ -1,5 +1,13 @@
 'use strict'
 
+const version = 0.1
+
+// Invalidate storage from older versions
+if ((localStorage.getItem('version') || -1) < version) {
+  localStorage.clear()
+  localStorage.setItem('version', version)
+}
+
 const Circlething = function () {
   const columns = 3
   const rows = 6
