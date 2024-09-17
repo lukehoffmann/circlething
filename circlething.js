@@ -1,6 +1,6 @@
 'use strict'
 
-const version = 0.11
+const version = 0.12
 
 // Invalidate storage from older versions
 if ((localStorage.getItem('version') || -1) < version) {
@@ -12,7 +12,7 @@ const Circlething = function () {
   const columns = 3
   const rows = 6
   const colors = ['red', 'orange', 'pink', 'purple']
-  const purpleMultiplier = 3
+  const purpleMultiplier = 5
   const minimumComboSize = 3
   const comboScores = {
     // Roughly based on
