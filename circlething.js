@@ -271,11 +271,20 @@ const Circlething = function () {
     }
   }
 
+  const colorWeightings = [
+    1,
+    1,
+    1,
+    1 / purpleMultiplier
+  ]
+  const colorWeightTotal = colorWeightings.reduce((sum, x) => sum + x, 0)
+  const colorWeightRanges = colorWeightings
+    .map(x => x / colorWeightTotal)
+    .map((x => weight => x += weight)(0))
+  
   function randomColor () {
-    // Use a reduced array lenght to give Purple reduced probability
-    // (because it appears last in the array)
-    const reducer = (purpleMultiplier - 1) / purpleMultiplier
-    return colors[Math.floor(Math.random() * (colors.length - reducer))]
+    const colorSelection = Math.random()
+    return colors[colorWeightRanges.findIndex(n => n > colorSelection)]
   }
 
   function recolorTitleAndFavicon () {
