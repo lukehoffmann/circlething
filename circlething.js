@@ -58,6 +58,8 @@ const Circlething = function () {
     display.debug
   )
 
+  let paused = true
+
   if (document.readyState !== 'loading') {
     onReady()
   } else {
@@ -87,11 +89,13 @@ const Circlething = function () {
     while (!game.canPlay()) {
       startGame()
     }
+    paused = false
   }
 
   function pieceHover() {
     game.clearHighlight()
     display.scorePreview = null
+    if (paused) return
 
     const combo = game.getCombo(this)
     if (combo.canPlay) {
@@ -106,6 +110,8 @@ const Circlething = function () {
   }
 
   function pieceClick() {
+    if (paused) return
+    paused = true
     if (game.ended) {
       startGame()
     } else {
@@ -120,6 +126,7 @@ const Circlething = function () {
         })
       }
     }
+    paused = false
   }
 
   function deletePieces(pieces, callback) {
