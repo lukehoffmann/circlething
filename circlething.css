@@ -48,10 +48,10 @@ h1 {
 
 body.endgame {
     background-color: #E7E7E7;
-}
 
-#gameboard.endgame {
-    background-color: #AAAAAA;
+    #gameboard {
+        background-color: #AAAAAA;
+    }
 }
 
 .orange {
