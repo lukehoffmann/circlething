@@ -1,6 +1,6 @@
 'use strict'
 
-const version = 0.12
+const version = 0.13
 
 // Invalidate storage from older versions
 if ((localStorage.getItem('version') || -1) < version) {
@@ -42,8 +42,8 @@ const Circlething = function () {
   }
 
   const coloring = new Coloring(colorMultipliers)
-  const scoring = new Scoring(comboScores, colorMultipliers)
-
+  const scoring = new Scoring(comboScores, colorMultipliers, coloring.randomColor())
+  const display = new Display(scoring, coloring)
   const game = new Game(
     columns,
     rows,
@@ -55,7 +55,7 @@ const Circlething = function () {
       piece.addEventListener('mouseleave', pieceHoverEnd)
       piece.addEventListener('click', pieceClick)
     },
-    debug
+    display.debug
   )
 
   if (document.readyState !== 'loading') {
@@ -68,20 +68,19 @@ const Circlething = function () {
     game.body = document.querySelector('body')
     game.board = document.getElementById('gameboard')
 
-    randomiseColors()
-    document.addEventListener('click', randomiseColors)
+    display.randomise()
+    document.addEventListener('click', display.randomise)
     startGame()
   }
 
   function startGame() {
     // clear everything from previous games
     scoring.reset()
-    showScore(scoring.score)
-    showHighScore(false)
+    display.updateScore()
+    display.highScore = false
 
     game.clearBoard()
     game.ended = false
-
     game.fillBoard()
 
     // if the board is unplayable, try again
@@ -91,31 +90,30 @@ const Circlething = function () {
   }
 
   function pieceHover() {
-    clearScorePreview()
-    game.clearClass('highlight')
+    game.clearHighlight()
+    display.scorePreview = null
 
     const combo = game.getCombo(this)
     if (combo.canPlay) {
-      combo.forEach(piece => piece.classList.add('highlight'))
-      showScorePreview(combo)
+      game.highlightCombo(combo)
+      display.scorePreview = combo
     }
   }
 
   function pieceHoverEnd() {
-    clearScorePreview()
-    game.clearClass('highlight')
+    game.clearHighlight()
+    display.scorePreview = null
   }
 
   function pieceClick() {
-
     if (game.ended) {
       startGame()
     } else {
       const combo = game.getCombo(this)
       if (combo.canPlay) {
-        scoring.update(combo.score, combo.color)
-        showScore(scoring.score, combo.color)
-        deleteCombo(combo, () => {
+        scoring.update(combo)
+        display.updateScore()
+        deletePieces(combo, () => {
           game.dropPieces()
           if (!game.canPlay())
             endGame()
@@ -124,68 +122,21 @@ const Circlething = function () {
     }
   }
 
-  function showScore(score, color) {
-    clearScorePreview()
-    const e = document.getElementById('score')
-    e.textContent = score
-    coloring.setColor(e, color)
-  }
-
-  function showHighScore(show) {
-    const [highScore, highScoreColor] = scoring.highScore
-    const isHighest = (scoring.score >= Number(highScore))
-
-    const oldHighest = document.getElementById('highest')
-    oldHighest.style.display = show && !isHighest ? 'block' : 'none'
-    coloring.setColor(oldHighest, highScoreColor)
-
-    document.getElementById('newhighest')
-      .style.display = show && isHighest ? 'inline' : 'none'
-
-    document.getElementById('highscore').textContent = highScore
-  }
-
-  function showScorePreview(combo) {
-    document.getElementById('nextscore').textContent = combo.score
-
-    const preview = document.getElementById('scorepreview')
-    coloring.setColor(preview, combo.color)
-    preview.style.display = 'inline'
-  }
-
-  function clearScorePreview() {
-    document.getElementById('nextscore').textContent = '0'
-    document.getElementById('scorepreview').style.display = 'none'
-  }
-
-  function deleteCombo(combo, callback) {
-    combo.forEach(p => {
-      p.removeAttribute('id')
-      p.removeAttribute('.gamepiece')
+  function deletePieces(pieces, callback) {
+    pieces.forEach(p => {
       p.classList.add('fadeout')
-      setTimeout(() => p.remove(), 300)
+      setTimeout(() => {
+        p.remove()
+      }, 300)
     })
     setTimeout(callback, 300)
   }
 
   function endGame() {
     game.ended = true
-    showHighScore(true)
+    display.highScore = true
   }
 
-  function randomiseColors() {
-    const randomItems = Array.from(document.getElementsByClassName('random'))
-    randomItems.forEach(e => coloring.setColor(e))
-
-    document.getElementById('randomfavicon')
-      .setAttribute('href', coloring.randomColor().concat('.png'))
-  }
-
-  function debug(message) {
-    const debugText = document.getElementById('debug')
-    debugText.textContent = message
-    debugText.style.display = message ? 'block' : 'inline'
-  }
 }
 
 class Game {
@@ -216,11 +167,7 @@ class Game {
     return this._body?.classList.contains('endgame')
   }
   set ended(value) {
-    if (value) {
-      this._body?.classList.add('endgame')
-    } else {
-      this._body?.classList.remove('endgame')
-    }
+    this._body?.classList[value ? 'add' : 'remove']('endgame')
   }
 
   fillBoard() {
@@ -240,9 +187,16 @@ class Game {
     return column
   }
 
+  getColumns() {
+    return Array.from(this.board.getElementsByClassName('column'))
+  }
+
+  getColumn(c) {
+    return this.board.getElementsByClassName('column').namedItem(`col${c}`)
+  }
+
   newPiece(c, r) {
     const piece = document.createElement('div')
-
     const color = this.coloring.randomColor()
     piece.classList.add('gamepiece', `${color}gamepiece`)
     piece.setAttribute('color', color)
@@ -251,7 +205,7 @@ class Game {
     return piece
   }
 
-  get pieces() {
+  getPieces() {
     return Array.from(this.board.getElementsByClassName('gamepiece'))
   }
 
@@ -264,16 +218,36 @@ class Game {
   }
 
   canPlay() {
-    return this.pieces.some(pieces => this.getCombo(pieces).canPlay)
+    return this.getPieces().some(pieces => this.getCombo(pieces).canPlay)
   }
 
   getCombo(piece) {
-    let combo = this.detectCombo(piece)
+    const color = piece.getAttribute('color')
+    
+    const tempClass = `temp${piece.id}`
+    this.propogateClassByColor(piece, tempClass, color)
+    const combo = Array.from(this.board.getElementsByClassName(tempClass))
+    this.getPieces().forEach(e => e.classList.remove(tempClass))
 
+    combo.color = color
     combo.canPlay = (combo.length >= this.minimumComboSize)
-    combo.score = combo.canPlay ? this.scoring.calculateScore(combo.length, combo.color) : 0
+    combo.score = combo.canPlay ? this.scoring.calculateScore(combo) : 0
 
     return combo
+  }
+
+  propogateClassByColor(piece, comboClass, color) {
+    if (piece && piece.getAttribute('color') === color && !piece.classList.contains(comboClass)) {
+      piece.classList.add(comboClass)
+
+      const position = this.piecePosition(piece)
+      const c = position.column
+      const r = position.row
+      this.propogateClassByColor(this.getPiece(c, r - 1), comboClass, color)
+      this.propogateClassByColor(this.getPiece(c, r + 1), comboClass, color)
+      this.propogateClassByColor(this.getPiece(c - 1, r), comboClass, color)
+      this.propogateClassByColor(this.getPiece(c + 1, r), comboClass, color)
+    }
   }
 
   dropPieces() {
@@ -290,45 +264,27 @@ class Game {
         }
         // backfill empty gap at top of column
         if (!this.pieceExists(c, r)) {
-          this.board.getElementsByClassName('column').namedItem(`col${c}`).prepend(this.newPiece(c, r))
+          this.getColumn(c).prepend(this.newPiece(c, r))
         }
       }
     }
   }
 
-  detectCombo(piece, comboClass, color) {
-    const tempClass = comboClass || `temp${piece.id}`
-    color = color || piece.getAttribute('color')
-    if (piece && piece.getAttribute('color') === color && !piece.classList.contains(tempClass)) {
-      piece.classList.add(tempClass)
-
-      const position = this.piecePosition(piece)
-      const c = position.column
-      const r = position.row
-      this.detectCombo(this.getPiece(c, r - 1), tempClass, color)
-      this.detectCombo(this.getPiece(c, r + 1), tempClass, color)
-      this.detectCombo(this.getPiece(c - 1, r), tempClass, color)
-      this.detectCombo(this.getPiece(c + 1, r), tempClass, color)
-    }
-    if (!comboClass) {
-      const combo = Array.from(this._board.getElementsByClassName(tempClass))
-      combo.color = color
-      this.clearClass(tempClass)
-      return combo
-    }
+  highlightCombo(combo) {
+    combo.forEach(piece => piece.classList.add('highlight'))
   }
 
-  clearClass(className) {
-    Array.from(this._board.getElementsByClassName('gamepiece')).forEach(e => e.classList.remove(className))
+  clearHighlight() {
+    this.getPieces().forEach(e => e.classList.remove('highlight'))
   }
 
   clearBoard() {
-    Array.from(this._board.getElementsByClassName('gamepiece')).forEach(function (e) { e.remove() })
-    Array.from(this._board.getElementsByClassName('column')).forEach(function (e) { e.remove() })
+    this.getPieces().forEach(function (e) { e.remove() })
+    this.getColumns().forEach(function (e) { e.remove() })
   }
 
   pieceId(c, r) {
-    return c.toString() + '_' + r.toString()
+    return `${c.toString()}_${r.toString()}`
   }
 
   piecePosition(piece) {
@@ -342,30 +298,36 @@ class Game {
 }
 
 class Scoring {
-  constructor(comboScores, colorMultipliers) {
-    this.current = 0
+  constructor(comboScores, colorMultipliers, color) {
+    this._current = 0
+    this._color = color
 
     this.comboScores = comboScores
     this.colorMultipliers = colorMultipliers
   }
 
   get score() {
-    return this.current
+    return this._current
+  }
+
+  get color() {
+    return this._color
   }
 
   reset() {
-    this.current = 0
+    this._current = 0
   }
 
-  calculateScore(comboSize, comboColor) {
-    return this.comboScores[comboSize] * this.colorMultipliers[comboColor]
+  calculateScore(combo) {
+    return this.comboScores[combo.length] * this.colorMultipliers[combo.color]
   }
 
-  update(score, color) {
-    this.current += score
-    if (this.current > localStorage.getItem('highScore') || 0) {
-      localStorage.setItem('highScore', score)
-      localStorage.setItem('highScoreColor', color)
+  update(combo) {
+    this._current += combo.score
+    this._color = combo.color
+    if (this._current > localStorage.getItem('highScore') || 0) {
+      localStorage.setItem('highScore', this._current)
+      localStorage.setItem('highScoreColor', this._color)
     }
   }
 
@@ -397,6 +359,56 @@ class Coloring {
   setColor(element, color) {
     element.classList.remove(...this.colors)
     element.classList.add(color || this.randomColor())
+  }
+}
+
+class Display {
+  constructor(scoring, coloring) {
+    this.scoring = scoring
+    this.coloring = coloring
+  }
+
+  updateScore() {
+    this.scorePreview = null
+    const e = document.getElementById('score')
+    e.textContent = this.scoring.score
+    this.coloring.setColor(e, this.scoring.color)
+  }
+
+  set scorePreview(combo) {
+    document.getElementById('nextscore').textContent = combo?.score
+
+    const preview = document.getElementById('scorepreview')
+    this.coloring.setColor(preview, combo?.color)
+    preview.style.display = combo ? 'inline' : 'none'
+  }
+
+  set highScore(value) {
+    const [highScore, highScoreColor] = this.scoring.highScore
+    const isHighest = (this.scoring.score >= Number(highScore))
+
+    const oldHighest = document.getElementById('highest')
+    oldHighest.style.display = value && !isHighest ? 'block' : 'none'
+    this.coloring.setColor(oldHighest, highScoreColor)
+
+    document.getElementById('newhighest')
+      .style.display = value && isHighest ? 'inline' : 'none'
+
+    document.getElementById('highscore').textContent = highScore
+  }
+
+  randomise() {
+    const randomItems = Array.from(document.getElementsByClassName('random'))
+    randomItems.forEach(e => this.coloring.setColor(e))
+
+    document.getElementById('randomfavicon')
+      .setAttribute('href', this.coloring.randomColor().concat('.png'))
+  }
+
+  debug(message) {
+    const debugText = document.getElementById('debug')
+    debugText.textContent = message
+    debugText.style.display = message ? 'block' : 'inline'
   }
 }
 
