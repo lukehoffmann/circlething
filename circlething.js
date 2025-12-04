@@ -117,6 +117,7 @@ const Circlething = function () {
     } else {
       const combo = game.getCombo(this)
       if (combo.canPlay) {
+        playComboSound(combo)
         scoring.update(combo)
         display.updateScore()
         deletePieces(combo, () => {
@@ -144,6 +145,51 @@ const Circlething = function () {
     display.highScore = true
   }
 
+  function playComboSound (combo) {
+    try {
+      const ctx = ensureAudioContext()
+      if (!ctx) return
+
+      const now = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      // frequency maps to combo size and color (purple = higher pitch)
+      const size = combo.length || 0
+      const base = 220
+      const freq = base + (size * 40) + (combo.color === 'purple' ? 200 : 0)
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now)
+
+      // short envelope: quick attack, short decay
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now)
+      osc.stop(now + 0.3)
+    } catch (e) {
+      // fail silently if audio can't be created
+    }
+  }
+
+  // audio context for click sounds (initialized on first user interaction)
+  let audioCtx = null
+
+  function ensureAudioContext () {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext
+      if (!AudioCtx) return null
+      if (!audioCtx) audioCtx = new AudioCtx()
+      return audioCtx
+    } catch (e) {
+      return null
+    }
+  }
 }
 
 class Game {
@@ -417,6 +463,7 @@ class Display {
     debugText.textContent = message
     debugText.style.display = message ? 'block' : 'inline'
   }
+
 }
 
 Circlething()
