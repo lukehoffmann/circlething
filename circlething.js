@@ -162,7 +162,38 @@ class Audio {
     }
   }
 
+  _scale = {
+    3: 0, 
+    4: 2, 
+    5: 4, 
+    6: 5, 
+    7: 7, 
+    8: 9, 
+    9: 11,
+    10: 12,
+    11: 14,
+    12: 16,
+    13: 17,
+    14: 19,
+    15: 21,
+    16: 22,
+    17: 23,
+    18: 25
+  } // major scale
+
   playComboSound(combo) {
+    // frequency maps to combo size and color
+    const size = combo.length || 3
+    const step = this._scale[size]
+    this.playTone(this.stepFreq(step))
+  }
+
+  stepFreq(step) {
+    const base = 440
+    return base * Math.pow(2, step / 12)
+  }
+
+  playTone(freq) {
     try {
       const ctx = this.context
       if (!ctx) return
@@ -171,24 +202,19 @@ class Audio {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
 
-      // frequency maps to combo size and color (purple = higher pitch)
-      const size = combo.length || 0
-      const base = 220
-      const freq = base + (size * 40) + (combo.color === 'purple' ? 200 : 0)
-
       osc.type = 'sine'
       osc.frequency.setValueAtTime(freq, now)
 
       // short envelope: quick attack, short decay
       gain.gain.setValueAtTime(0.0001, now)
       gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01)
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.50)
 
       osc.connect(gain)
       gain.connect(ctx.destination)
 
       osc.start(now)
-      osc.stop(now + 0.3)
+      osc.stop(now + 0.6)
     } catch (e) {
       // fail silently if audio can't be created
     }
