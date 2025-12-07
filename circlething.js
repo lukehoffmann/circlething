@@ -44,6 +44,7 @@ const Circlething = function () {
   const coloring = new Coloring(colorMultipliers)
   const scoring = new Scoring(comboScores, colorMultipliers, coloring.randomColor())
   const display = new Display(scoring, coloring)
+  const audio = new Audio()
   const game = new Game(
     columns,
     rows,
@@ -71,7 +72,7 @@ const Circlething = function () {
     game.board = document.getElementById('gameboard')
 
     display.randomise()
-    document.addEventListener('click', display.randomise)
+    document.addEventListener('click', () => display.randomise())
     startGame()
   }
 
@@ -117,7 +118,7 @@ const Circlething = function () {
     } else {
       const combo = game.getCombo(this)
       if (combo.canPlay) {
-        playComboSound(combo)
+        audio.playComboSound(combo)
         scoring.update(combo)
         display.updateScore()
         deletePieces(combo, () => {
@@ -145,9 +146,25 @@ const Circlething = function () {
     display.highScore = true
   }
 
-  function playComboSound (combo) {
+}
+
+class Audio {
+  _audioCtx = null
+
+  get context() {
     try {
-      const ctx = ensureAudioContext()
+      const AudioCtx = window.AudioContext || window.webkitAudioContext
+      if (!AudioCtx) return null
+      if (!this._audioCtx) this._audioCtx = new AudioCtx()
+      return this._audioCtx
+    } catch (e) {
+      return null
+    }
+  }
+
+  playComboSound(combo) {
+    try {
+      const ctx = this.context
       if (!ctx) return
 
       const now = ctx.currentTime
@@ -177,19 +194,6 @@ const Circlething = function () {
     }
   }
 
-  // audio context for click sounds (initialized on first user interaction)
-  let audioCtx = null
-
-  function ensureAudioContext () {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext
-      if (!AudioCtx) return null
-      if (!audioCtx) audioCtx = new AudioCtx()
-      return audioCtx
-    } catch (e) {
-      return null
-    }
-  }
 }
 
 class Game {
@@ -276,7 +280,7 @@ class Game {
 
   getCombo(piece) {
     const color = piece.getAttribute('color')
-    
+
     const tempClass = `temp${piece.id}`
     this.propogateClassByColor(piece, tempClass, color)
     const combo = Array.from(this.board.getElementsByClassName(tempClass))
