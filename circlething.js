@@ -42,7 +42,8 @@ const Circlething = function () {
   }
 
   const coloring = new Coloring(colorMultipliers)
-  const scoring = new Scoring(comboScores, colorMultipliers, coloring.randomColor())
+  const scoring = new Scoring(comboScores, coloring)
+
   const display = new Display(scoring, coloring)
   const audio = new Audio()
   const game = new Game(
@@ -163,12 +164,12 @@ class Audio {
   }
 
   _scale = {
-    3: 0, 
-    4: 2, 
-    5: 4, 
-    6: 5, 
-    7: 7, 
-    8: 9, 
+    3: 0,
+    4: 2,
+    5: 4,
+    6: 5,
+    7: 7,
+    8: 9,
     9: 11,
     10: 12,
     11: 14,
@@ -381,12 +382,12 @@ class Game {
 }
 
 class Scoring {
-  constructor(comboScores, colorMultipliers, color) {
+  constructor(comboScores, coloring) {
     this._current = 0
-    this._color = color
+    this.coloring = coloring
+    this._color = coloring.randomColor()
 
     this.comboScores = comboScores
-    this.colorMultipliers = colorMultipliers
   }
 
   get score() {
@@ -399,10 +400,11 @@ class Scoring {
 
   reset() {
     this._current = 0
+    this.coloring.colorsUsed = 2
   }
 
   calculateScore(combo) {
-    return this.comboScores[combo.length] * this.colorMultipliers[combo.color]
+    return this.comboScores[combo.length] * this.coloring.getMultiplier(combo.color)
   }
 
   update(combo) {
@@ -411,6 +413,15 @@ class Scoring {
     if (this._current > localStorage.getItem('highScore') || 0) {
       localStorage.setItem('highScore', this._current)
       localStorage.setItem('highScoreColor', this._color)
+    }
+    if (this._current > 500) {
+      this.coloring.colorsUsed = 4
+    }
+    else if (this._current > 200) {
+      this.coloring.colorsUsed = 3
+    }
+    else {
+      this.coloring.colorsUsed = 2
     }
   }
 
@@ -424,23 +435,46 @@ class Scoring {
 
 class Coloring {
   constructor(colorMultipliers) {
-    this.colors = Object.keys(colorMultipliers)
+    this._multipliers = colorMultipliers
+    this._colors = Object.keys(colorMultipliers)
 
-    const colorWeightings = Object.values(colorMultipliers).map(w => 1 / w)
-    const colorWeightTotal = colorWeightings.reduce((sum, x) => sum + x, 0)
+    this.colorsUsed = 2
+  }
 
-    this.colorWeightRanges = colorWeightings
-      .map(x => x / colorWeightTotal)
+  get colorsUsed() {
+    return this._colorsUsed
+  }
+  set colorsUsed(c) {
+    this._colorsUsed = c
+    this._updateWeightings(c)
+  }
+
+  getMultiplier(color) {
+    return this._multipliers[color]
+  }
+
+  _updateWeightings(colorsUsed) {
+    const weightings = Object.values(this._multipliers)
+      .slice(0, colorsUsed)
+      .map(m => 1 / m)
+
+    const totalWeight = weightings
+      .reduceRight((sum, x) => sum + x)
+
+    // Rescale weightings between 0 and 1
+    this._weightRanges = weightings
+      .map(x => x / totalWeight)
       .map((x => weight => x += weight)(0))
+    console.log(this._weightRanges)
   }
 
   randomColor() {
-    const colorSelection = Math.random()
-    return this.colors[this.colorWeightRanges.findIndex(n => n > colorSelection)]
+    const colorIndex = this._weightRanges.findIndex(n => n > Math.random())
+    return this._colors[colorIndex]
   }
 
   setColor(element, color) {
-    element.classList.remove(...this.colors)
+    element.classList.remove(...this._colors)
     element.classList.add(color || this.randomColor())
   }
 }
@@ -483,7 +517,6 @@ class Display {
   randomise() {
     const randomItems = Array.from(document.getElementsByClassName('random'))
     randomItems.forEach(e => this.coloring.setColor(e))
-
     document.getElementById('randomfavicon')
       .setAttribute('href', this.coloring.randomColor().concat('.png'))
   }
