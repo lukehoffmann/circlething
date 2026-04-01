@@ -1,6 +1,6 @@
 'use strict'
 
-const version = 0.13
+const version = 0.14
 
 // Invalidate storage from older versions
 if ((localStorage.getItem('version') || -1) < version) {
@@ -17,7 +17,7 @@ const Circlething = function () {
     'red': 1,
     'orange': 1,
     'pink': 1,
-    'purple': 5
+    'purple': 1.3
   }
 
   const comboScores = {
@@ -400,11 +400,11 @@ class Scoring {
 
   reset() {
     this._current = 0
-    this.coloring.colorsUsed = 2
+    this.coloring.colorsUsed = 3
   }
 
   calculateScore(combo) {
-    return this.comboScores[combo.length] * this.coloring.getMultiplier(combo.color)
+    return this.comboScores[combo.length] * Math.round(this.coloring.getMultiplier(combo.color))
   }
 
   update(combo) {
@@ -414,14 +414,11 @@ class Scoring {
       localStorage.setItem('highScore', this._current)
       localStorage.setItem('highScoreColor', this._color)
     }
-    if (this._current > 500) {
+    if (this._current > 1000) {
       this.coloring.colorsUsed = 4
     }
-    else if (this._current > 200) {
-      this.coloring.colorsUsed = 3
-    }
     else {
-      this.coloring.colorsUsed = 2
+      this.coloring.colorsUsed = 3
     }
   }
 
@@ -438,7 +435,7 @@ class Coloring {
     this._multipliers = colorMultipliers
     this._colors = Object.keys(colorMultipliers)
 
-    this.colorsUsed = 2
+    this.colorsUsed = 3
   }
 
   get colorsUsed() {
