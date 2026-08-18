@@ -1,0 +1,11 @@
+:root {
+    --body-color: #F9F9F9;
+    --body-color-game-over: #E7E7E7;
+    --board-color: #F0F0F0;
+    --board-color-game-over: #AAAAAA;
+    --tile-color-1: #FF0A1B;
+    --tile-color-2: #FA9732;
+    --tile-color-3: #478559;
+    --tile-color-4: #35A7FF;
+    --tile-select-color: #bbbbbb;
+}

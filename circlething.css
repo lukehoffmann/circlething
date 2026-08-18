@@ -1,5 +1,17 @@
+:root {
+    --body-color: #F9F9F9;
+    --body-color-game-over: #E7E7E7;
+    --board-color: #F0F0F0;
+    --board-color-game-over: #AAAAAA;
+    --tile-color-1: #ce4468;
+    --tile-color-2: #f7b358;
+    --tile-color-3: #759e4d;
+    --tile-color-4: #8d90cb;
+    --tile-select-color: #bbbbbb;
+}
+
 body {
-    background-color: #F9F9F9;
+    background-color: var(--body-color);
     font-family: Georgia, 'Times New Roman', serif;
     text-align: center;
     text-transform: lowercase;
@@ -17,7 +29,7 @@ h1 {
 }
 
 #gameboard {
-    background-color: #F0F0F0;
+    background-color: var(--board-color);
     margin: 5% 0 0 0;
 }
 
@@ -47,47 +59,47 @@ h1 {
 }
 
 body.endgame {
-    background-color: #E7E7E7;
+    background-color: var(--body-color-game-over);
 
     #gameboard {
-        background-color: #AAAAAA;
+        background-color: var(--board-color-game-over);
     }
 }
 
 .orange {
-    color: #FF9C5B;
+    color: var(--tile-color-1);
 }
 
 .red {
-    color: #E84A5F;
+    color: var(--tile-color-2);
 }
 
 .pink {
-    color: #FF847C;
+    color: var(--tile-color-3);
 }
 
 .purple {
-    color: #cc52cc;
+    color: var(--tile-color-4);
 }
 
 .orangegamepiece {
-    background-color: #FF9C5B;
+    background-color: var(--tile-color-1);
 }
 
 .redgamepiece {
-    background-color: #E84A5F;
+    background-color: var(--tile-color-2);
 }
 
 .pinkgamepiece {
-    background-color: #FF847C;
+    background-color: var(--tile-color-3);
 }
 
 .purplegamepiece {
-    background-color: #cc52cc;
+    background-color: var(--tile-color-4);
 }
 
 .highlight {
-    background-color: #BBB;
+    background-color: var(--tile-select-color);
 }
 
 /* fade */
